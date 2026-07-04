@@ -153,7 +153,6 @@ export default function SetupForm() {
               key={q.id}
               id={q.id}
               name={q.name}
-              available={!!q.everyAyahFolder}
               checked={selectedQaris.includes(q.id)}
               onToggle={toggleQari}
             />
@@ -166,7 +165,6 @@ export default function SetupForm() {
               key={q.id}
               id={q.id}
               name={q.name}
-              available={!!q.everyAyahFolder}
               checked={selectedQaris.includes(q.id)}
               onToggle={toggleQari}
             />
@@ -187,13 +185,11 @@ export default function SetupForm() {
 function QariCheckbox({
   id,
   name,
-  available,
   checked,
   onToggle,
 }: {
   id: string;
   name: string;
-  available: boolean;
   checked: boolean;
   onToggle: (id: string) => void;
 }) {
@@ -208,7 +204,6 @@ function QariCheckbox({
       }`}
     >
       {name}
-      {!available && <span className="ml-1 text-[10px] opacity-60">(audio pending)</span>}
     </button>
   );
 }

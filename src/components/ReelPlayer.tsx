@@ -2,23 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import SceneBackground from "@/components/SceneBackground";
-import { getAudioUrl, estimateReadDurationMs } from "@/lib/audio";
+import { getAudioUrlCandidates, estimateReadDurationMs } from "@/lib/audio";
 import type { ReelSegment } from "@/lib/types";
 
-export default function ReelPlayer({
-  segment,
-  reelIndex,
-  totalReels,
-  onNextReel,
-}: {
-  segment: ReelSegment;
-  reelIndex: number;
-  totalReels: number;
-  onNextReel: () => void;
-}) {
+export default function ReelPlayer({ segment, isActive }: { segment: ReelSegment; isActive: boolean }) {
   const [index, setIndex] = useState(0);
   const [playing, setPlaying] = useState(true);
-  const [audioFailed, setAudioFailed] = useState(false);
+  const [candidateIndex, setCandidateIndex] = useState(0);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -28,32 +18,39 @@ export default function ReelPlayer({
   const done = index >= ayahs.length;
 
   function goNextAyah() {
-    setAudioFailed(false);
+    setCandidateIndex(0);
     setIndex((i) => i + 1);
   }
-  function goPrevAyah() {
-    setAudioFailed(false);
-    setIndex((i) => Math.max(0, i - 1));
-  }
+
   function restart() {
-    setAudioFailed(false);
+    setCandidateIndex(0);
     setIndex(0);
     setPlaying(true);
   }
 
+  // Pause and stop timers the moment this reel scrolls out of view.
+  useEffect(() => {
+    if (!isActive) {
+      audioRef.current?.pause();
+      if (timerRef.current) clearTimeout(timerRef.current);
+    }
+  }, [isActive]);
+
   useEffect(() => {
     if (timerRef.current) clearTimeout(timerRef.current);
-    if (!current || done) return;
+    if (!current || done || !isActive) return;
 
-    const url = getAudioUrl(segment.qari, current.surahNumber, current.numberInSurah);
+    const candidates = getAudioUrlCandidates(segment.qari, current.surahNumber, current.numberInSurah);
+    const url = candidates[candidateIndex];
     const audio = audioRef.current;
 
-    if (url && audio && !audioFailed) {
+    if (url && audio) {
       audio.src = url;
-      if (playing) audio.play().catch(() => setAudioFailed(true));
+      if (playing) audio.play().catch(() => setCandidateIndex((c) => c + 1));
       return;
     }
 
+    // Every audio candidate failed (or this reciter has none yet): pace by reading time instead.
     if (playing) {
       const timingText = `${current.bismillah ?? ""} ${current.arabic}`;
       timerRef.current = setTimeout(goNextAyah, estimateReadDurationMs(timingText));
@@ -62,14 +59,14 @@ export default function ReelPlayer({
       if (timerRef.current) clearTimeout(timerRef.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [index, segment, playing, audioFailed]);
+  }, [index, segment, playing, candidateIndex, isActive]);
 
   function togglePlay() {
     setPlaying((p) => {
       const next = !p;
       const audio = audioRef.current;
       if (audio && audio.src) {
-        if (next) audio.play().catch(() => setAudioFailed(true));
+        if (next) audio.play().catch(() => setCandidateIndex((c) => c + 1));
         else audio.pause();
       }
       return next;
@@ -77,30 +74,29 @@ export default function ReelPlayer({
   }
 
   return (
-    <div className="relative mx-auto aspect-[9/16] max-h-[80vh] w-full max-w-[420px] overflow-hidden rounded-[2rem] border-4 border-[#c9a15d]/70 shadow-2xl">
-      <audio ref={audioRef} onEnded={goNextAyah} onError={() => setAudioFailed(true)} className="hidden" />
+    <div className="relative mx-auto flex h-full w-full flex-col overflow-hidden bg-black sm:max-w-[480px] sm:rounded-2xl sm:border-4 sm:border-[#c9a15d]/70 sm:shadow-2xl">
+      <audio
+        ref={audioRef}
+        onEnded={goNextAyah}
+        onError={() => setCandidateIndex((c) => c + 1)}
+        className="hidden"
+      />
 
       <div className="absolute inset-0">
         <SceneBackground sceneId={segment.sceneId} />
         <div className="absolute inset-0 bg-black/35" />
       </div>
 
-      <div className="relative z-10 flex items-center gap-3 px-4 pt-4">
-        <div className="h-1 flex-1 rounded-full bg-white/20 overflow-hidden">
+      <div className="relative z-10 shrink-0 px-4 pt-4">
+        <div className="h-1 w-full overflow-hidden rounded-full bg-white/20">
           <div
             className="h-full bg-amber-300 transition-all"
             style={{ width: `${Math.min(100, (index / ayahs.length) * 100)}%` }}
           />
         </div>
-      </div>
-
-      <div className="relative z-10 flex items-center justify-between px-4 pt-2 text-xs text-white/70">
-        <span>
+        <p className="mt-2 text-xs text-white/70">
           {segment.qari.name} · {segment.qari.style}
-        </span>
-        <span>
-          Reel {reelIndex + 1} / {totalReels}
-        </span>
+        </p>
       </div>
 
       <div
@@ -108,81 +104,46 @@ export default function ReelPlayer({
         tabIndex={0}
         onClick={togglePlay}
         onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && togglePlay()}
-        className="relative z-10 flex flex-1 flex-col items-center justify-center px-6 text-center"
+        className="relative z-10 flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto px-6 py-4 text-center"
       >
         {done ? (
           <div className="flex flex-col items-center gap-4 rounded-2xl bg-black/50 p-6">
             <p className="font-display text-xl font-semibold text-white">Reel complete</p>
-            <div className="flex gap-3">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  restart();
-                }}
-                className="rounded-full bg-amber-400 px-5 py-2 text-[#3b2a1a] font-medium"
-              >
-                Replay
-              </button>
-              {reelIndex < totalReels - 1 && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onNextReel();
-                  }}
-                  className="rounded-full bg-white/10 px-5 py-2 text-white font-medium"
-                >
-                  Next reel
-                </button>
-              )}
-            </div>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                restart();
+              }}
+              className="rounded-full bg-amber-400 px-5 py-2 text-[#3b2a1a] font-medium"
+            >
+              Replay
+            </button>
           </div>
         ) : (
           current && (
-            <div key={index} className="flex flex-col items-center gap-4" style={{ animation: "rise 0.45s ease" }}>
+            <div
+              key={index}
+              className="flex max-h-full flex-col items-center gap-3 overflow-y-auto"
+              style={{ animation: "rise 0.45s ease" }}
+            >
               {current.bismillah && (
-                <div className="rounded-xl border border-amber-200/60 bg-black/35 px-5 py-2.5">
-                  <p dir="rtl" className="font-arabic text-2xl leading-relaxed text-amber-100">
+                <div className="rounded-xl border border-amber-200/60 bg-black/35 px-4 py-2">
+                  <p dir="rtl" className="font-arabic text-xl leading-relaxed text-amber-100 sm:text-2xl">
                     {current.bismillah}
                   </p>
                 </div>
               )}
               {current.arabic && (
-                <p dir="rtl" className="font-arabic text-3xl leading-[1.9] text-white drop-shadow-lg sm:text-4xl">
+                <p dir="rtl" className="font-arabic text-2xl leading-[1.8] text-white drop-shadow-lg sm:text-3xl">
                   {current.arabic}
                 </p>
               )}
-              <p className="max-w-md text-base text-white/85 drop-shadow">{current.translation}</p>
-              {!playing && <span className="text-white/60 text-sm">Paused — tap to resume</span>}
+              <p className="max-w-md text-sm text-white/85 drop-shadow sm:text-base">{current.translation}</p>
+              {!playing && <span className="text-xs text-white/60">Paused — tap to resume</span>}
             </div>
           )
         )}
       </div>
-
-      {!done && (
-        <div className="relative z-10 flex items-center justify-center gap-6 pb-6">
-          <button
-            onClick={goPrevAyah}
-            className="h-10 w-10 rounded-full bg-white/10 text-white text-lg"
-            aria-label="Previous ayah"
-          >
-            ‹
-          </button>
-          <button
-            onClick={togglePlay}
-            className="h-14 w-14 rounded-full bg-amber-400 text-[#3b2a1a] text-xl font-semibold"
-            aria-label={playing ? "Pause" : "Play"}
-          >
-            {playing ? "❚❚" : "▶"}
-          </button>
-          <button
-            onClick={goNextAyah}
-            className="h-10 w-10 rounded-full bg-white/10 text-white text-lg"
-            aria-label="Next ayah"
-          >
-            ›
-          </button>
-        </div>
-      )}
     </div>
   );
 }

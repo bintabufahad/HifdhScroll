@@ -30,8 +30,11 @@ export interface Qari {
   id: string;
   name: string;
   style: QariStyle;
-  /** EveryAyah.com folder name for per-ayah mp3s, or null if not available yet. */
-  everyAyahFolder: string | null;
+  /**
+   * Candidate EveryAyah.com folder names for per-ayah mp3s, tried in order until one
+   * loads. Empty when no source is known yet.
+   */
+  everyAyahFolders: string[];
 }
 
 export interface Scene {

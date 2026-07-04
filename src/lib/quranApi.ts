@@ -2,7 +2,8 @@ import { getSurah, surahs } from "./surahs";
 import type { Ayah, ReelConfig } from "./types";
 
 const API_BASE = "https://api.alquran.cloud/v1";
-const EDITIONS = "quran-uthmani,en.sahih";
+const ARABIC_EDITION = "quran-uthmani";
+const TRANSLATION_EDITION = "en.sahih";
 const BISMILLAH = "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ";
 /** At-Tawbah opens with no Bismillah. */
 const SURAH_WITHOUT_BISMILLAH = 9;
@@ -17,16 +18,12 @@ interface RawAyah {
 interface RawEdition {
   ayahs?: RawAyah[];
   surahs?: { ayahs: RawAyah[] }[];
-  number?: number;
-  englishName?: string;
-  name?: string;
-  numberOfAyahs?: number;
 }
 
-interface RawResponse {
+interface RawSingleResponse {
   code: number;
   status: string;
-  data: RawEdition[];
+  data: RawEdition;
 }
 
 function flattenAyahs(edition: RawEdition): RawAyah[] {
@@ -35,25 +32,25 @@ function flattenAyahs(edition: RawEdition): RawAyah[] {
   return [];
 }
 
-async function fetchOnce(path: string): Promise<RawResponse> {
+async function fetchEditionOnce(path: string): Promise<RawAyah[]> {
   const res = await fetch(`${API_BASE}${path}`);
   if (!res.ok) {
     throw new Error(`Quran API request failed (${res.status}) for ${path}`);
   }
-  const json = (await res.json()) as RawResponse;
-  if (json.code !== 200 || !Array.isArray(json.data) || json.data.length < 2) {
+  const json = (await res.json()) as RawSingleResponse;
+  if (json.code !== 200 || !json.data) {
     throw new Error(`Unexpected Quran API response shape for ${path}`);
   }
-  return json;
+  return flattenAyahs(json.data);
 }
 
 /** The public API occasionally 500s transiently; one retry clears most of those. */
-async function fetchJson(path: string): Promise<RawResponse> {
+async function fetchEdition(path: string): Promise<RawAyah[]> {
   try {
-    return await fetchOnce(path);
+    return await fetchEditionOnce(path);
   } catch {
     await new Promise((resolve) => setTimeout(resolve, 600));
-    return fetchOnce(path);
+    return fetchEditionOnce(path);
   }
 }
 
@@ -71,10 +68,7 @@ function splitBismillah(surahNumber: number, numberInSurah: number, text: string
   return { arabic: text, bismillah: null };
 }
 
-function zipEditions(json: RawResponse, surahNumberFallback?: number): Ayah[] {
-  const arabic = flattenAyahs(json.data[0]);
-  const translation = flattenAyahs(json.data[1]);
-
+function zipEditions(arabic: RawAyah[], translation: RawAyah[], surahNumberFallback?: number): Ayah[] {
   return arabic.map((a, i) => {
     const surahNumber = a.surah?.number ?? surahNumberFallback ?? 0;
     const meta = getSurah(surahNumber);
@@ -93,8 +87,11 @@ function zipEditions(json: RawResponse, surahNumberFallback?: number): Ayah[] {
 }
 
 async function fetchSurahFull(surahNumber: number): Promise<Ayah[]> {
-  const json = await fetchJson(`/surah/${surahNumber}/editions/${EDITIONS}`);
-  return zipEditions(json, surahNumber);
+  const [arabic, translation] = await Promise.all([
+    fetchEdition(`/surah/${surahNumber}/${ARABIC_EDITION}`),
+    fetchEdition(`/surah/${surahNumber}/${TRANSLATION_EDITION}`),
+  ]);
+  return zipEditions(arabic, translation, surahNumber);
 }
 
 async function fetchSurahRange(startSurah: number, startAyah: number, endSurah: number, endAyah: number): Promise<Ayah[]> {
@@ -111,8 +108,11 @@ async function fetchSurahRange(startSurah: number, startAyah: number, endSurah: 
 }
 
 async function fetchPage(pageNumber: number): Promise<Ayah[]> {
-  const json = await fetchJson(`/page/${pageNumber}/editions/${EDITIONS}`);
-  return zipEditions(json);
+  const [arabic, translation] = await Promise.all([
+    fetchEdition(`/page/${pageNumber}/${ARABIC_EDITION}`),
+    fetchEdition(`/page/${pageNumber}/${TRANSLATION_EDITION}`),
+  ]);
+  return zipEditions(arabic, translation);
 }
 
 export async function fetchAyahs(config: ReelConfig): Promise<Ayah[]> {
