@@ -1,5 +1,4 @@
 import { getQari } from "./qaris";
-import { getScene } from "./scenes";
 import { getSurah, TOTAL_PAGES } from "./surahs";
 import type { ReelConfig } from "./types";
 
@@ -13,16 +12,17 @@ function toInt(value: string | undefined): number | undefined {
 
 export function parseReelConfig(sp: Record<string, string | undefined>): ParseResult {
   const mode = sp.mode;
-  const qariId = sp.qari;
-  const sceneId = sp.scene;
+  const qaris = (sp.qaris ?? "")
+    .split(",")
+    .map((id) => id.trim())
+    .filter((id) => id && getQari(id));
 
-  if (!qariId || !getQari(qariId)) return { error: "Please choose a reciter." };
-  const scene = getScene(sceneId ?? "");
+  if (qaris.length === 0) return { error: "Please choose at least one reciter." };
 
   if (mode === "surah") {
     const surah = toInt(sp.surah);
     if (!surah || !getSurah(surah)) return { error: "Please choose a valid surah." };
-    return { config: { mode, surah, qari: qariId, scene: scene.id } };
+    return { config: { mode, surah, qaris } };
   }
 
   if (mode === "page") {
@@ -30,7 +30,7 @@ export function parseReelConfig(sp: Record<string, string | undefined>): ParseRe
     if (!page || page < 1 || page > TOTAL_PAGES) {
       return { error: `Please choose a page between 1 and ${TOTAL_PAGES}.` };
     }
-    return { config: { mode, page, qari: qariId, scene: scene.id } };
+    return { config: { mode, page, qaris } };
   }
 
   if (mode === "range") {
@@ -53,7 +53,7 @@ export function parseReelConfig(sp: Record<string, string | undefined>): ParseRe
     if (endSurah < startSurah || (endSurah === startSurah && endAyah < startAyah)) {
       return { error: "The range end must come after the start." };
     }
-    return { config: { mode, startSurah, startAyah, endSurah, endAyah, qari: qariId, scene: scene.id } };
+    return { config: { mode, startSurah, startAyah, endSurah, endAyah, qaris } };
   }
 
   return { error: "Please choose Surah, Page, or Range to build a reel." };

@@ -138,6 +138,128 @@ function Forest() {
   );
 }
 
+function Vignette() {
+  return <div className="absolute inset-0 shadow-[inset_0_0_120px_40px_rgba(0,0,0,0.35)]" />;
+}
+
+function Grain({ opacity = 0.08 }: { opacity?: number }) {
+  return (
+    <div
+      className="absolute inset-0"
+      style={{
+        opacity,
+        backgroundImage:
+          "radial-gradient(circle at 20% 30%, #000 0.5px, transparent 0.5px), radial-gradient(circle at 60% 70%, #000 0.5px, transparent 0.5px), radial-gradient(circle at 80% 20%, #000 0.5px, transparent 0.5px)",
+        backgroundSize: "3px 3px, 4px 4px, 5px 5px",
+      }}
+    />
+  );
+}
+
+function Parchment() {
+  return (
+    <div className="absolute inset-0 overflow-hidden bg-gradient-to-br from-[#f5ecd7] via-[#ecdcb3] to-[#d9c48f]">
+      <Grain opacity={0.08} />
+      <Vignette />
+    </div>
+  );
+}
+
+function Ivory() {
+  return (
+    <div className="absolute inset-0 overflow-hidden bg-gradient-to-b from-[#faf6ee] to-[#eee2ca]">
+      <Vignette />
+    </div>
+  );
+}
+
+function Sepia() {
+  return (
+    <div className="absolute inset-0 overflow-hidden bg-gradient-to-b from-[#a4835f] via-[#6b4f34] to-[#3a2a1b]">
+      <Grain opacity={0.12} />
+      <Vignette />
+    </div>
+  );
+}
+
+function Charcoal() {
+  return (
+    <div className="absolute inset-0 overflow-hidden bg-gradient-to-b from-[#3a3a3a] to-[#0d0d0d]">
+      <Grain opacity={0.06} />
+      <Vignette />
+    </div>
+  );
+}
+
+function RoseDusk() {
+  return (
+    <div className="absolute inset-0 overflow-hidden bg-gradient-to-b from-[#f6d9d9] via-[#dba0a8] to-[#6d3f4d]">
+      <div
+        className="absolute left-1/2 top-1/4 h-24 w-24 -translate-x-1/2 rounded-full bg-white/40 blur-2xl"
+        style={{ animation: "glowPulse 9s ease-in-out infinite" }}
+      />
+      <Vignette />
+    </div>
+  );
+}
+
+function Lavender() {
+  return (
+    <div className="absolute inset-0 overflow-hidden bg-gradient-to-b from-[#e9e0f7] via-[#c3b1e0] to-[#5f4a7a]">
+      <div className="absolute inset-x-0 top-1/3 h-1/3 w-[200%] opacity-30" style={{ animation: "drift 45s linear infinite" }}>
+        <div className="absolute left-[15%] h-14 w-48 rounded-full bg-white/50 blur-2xl" />
+        <div className="absolute left-[60%] h-10 w-56 rounded-full bg-white/40 blur-2xl" />
+      </div>
+      <Vignette />
+    </div>
+  );
+}
+
+function GoldenHour() {
+  return (
+    <div className="absolute inset-0 overflow-hidden bg-gradient-to-b from-[#ffe8ab] via-[#e8a94e] to-[#7a4a15]">
+      <div
+        className="absolute left-1/2 top-[35%] h-32 w-32 -translate-x-1/2 rounded-full bg-gradient-to-b from-yellow-100 to-amber-400 blur-[2px]"
+        style={{ animation: "glowPulse 6s ease-in-out infinite" }}
+      />
+      <Vignette />
+    </div>
+  );
+}
+
+function TealFade() {
+  return (
+    <div className="absolute inset-0 overflow-hidden bg-gradient-to-b from-[#c7f0e4] via-[#4fa896] to-[#0d3d38]">
+      <Vignette />
+    </div>
+  );
+}
+
+function MoonlitSilver() {
+  return (
+    <div className="absolute inset-0 overflow-hidden bg-gradient-to-b from-[#dde5ec] via-[#8695a6] to-[#31404e]">
+      <Stars count={18} className="opacity-60" />
+      <div
+        className="absolute right-[18%] top-[18%] h-14 w-14 rounded-full bg-white/90 blur-[1px]"
+        style={{ animation: "glowPulse 8s ease-in-out infinite" }}
+      />
+      <Vignette />
+    </div>
+  );
+}
+
+function MistyDawn() {
+  return (
+    <div className="absolute inset-0 overflow-hidden bg-gradient-to-b from-[#f3e6e0] via-[#dcc9c9] to-[#a9b9c9]">
+      <div className="absolute inset-x-0 top-1/4 h-1/2 w-[200%] opacity-40" style={{ animation: "drift 55s linear infinite" }}>
+        <div className="absolute left-[8%] h-16 w-56 rounded-full bg-white/60 blur-2xl" />
+        <div className="absolute left-[50%] h-12 w-64 rounded-full bg-white/50 blur-2xl" />
+      </div>
+      <Vignette />
+    </div>
+  );
+}
+
 const SCENES: Record<string, () => React.ReactElement> = {
   sunset: Sunset,
   ocean: Ocean,
@@ -145,6 +267,16 @@ const SCENES: Record<string, () => React.ReactElement> = {
   mountains: Mountains,
   nightsky: NightSky,
   forest: Forest,
+  parchment: Parchment,
+  ivory: Ivory,
+  sepia: Sepia,
+  charcoal: Charcoal,
+  rosedusk: RoseDusk,
+  lavender: Lavender,
+  goldenhour: GoldenHour,
+  tealfade: TealFade,
+  moonlit: MoonlitSilver,
+  mistydawn: MistyDawn,
 };
 
 export default function SceneBackground({ sceneId, className = "" }: { sceneId: string; className?: string }) {

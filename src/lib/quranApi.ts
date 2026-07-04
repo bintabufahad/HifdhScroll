@@ -3,6 +3,9 @@ import type { Ayah, ReelConfig } from "./types";
 
 const API_BASE = "https://api.alquran.cloud/v1";
 const EDITIONS = "quran-uthmani,en.sahih";
+const BISMILLAH = "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ";
+/** At-Tawbah opens with no Bismillah. */
+const SURAH_WITHOUT_BISMILLAH = 9;
 
 interface RawAyah {
   number: number;
@@ -32,7 +35,7 @@ function flattenAyahs(edition: RawEdition): RawAyah[] {
   return [];
 }
 
-async function fetchJson(path: string): Promise<RawResponse> {
+async function fetchOnce(path: string): Promise<RawResponse> {
   const res = await fetch(`${API_BASE}${path}`);
   if (!res.ok) {
     throw new Error(`Quran API request failed (${res.status}) for ${path}`);
@@ -44,6 +47,30 @@ async function fetchJson(path: string): Promise<RawResponse> {
   return json;
 }
 
+/** The public API occasionally 500s transiently; one retry clears most of those. */
+async function fetchJson(path: string): Promise<RawResponse> {
+  try {
+    return await fetchOnce(path);
+  } catch {
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    return fetchOnce(path);
+  }
+}
+
+function splitBismillah(surahNumber: number, numberInSurah: number, text: string): { arabic: string; bismillah: string | null } {
+  if (numberInSurah !== 1 || surahNumber === SURAH_WITHOUT_BISMILLAH) {
+    return { arabic: text, bismillah: null };
+  }
+  const trimmed = text.trim();
+  if (trimmed === BISMILLAH) {
+    return { arabic: "", bismillah: BISMILLAH };
+  }
+  if (trimmed.startsWith(BISMILLAH)) {
+    return { arabic: trimmed.slice(BISMILLAH.length).trim(), bismillah: BISMILLAH };
+  }
+  return { arabic: text, bismillah: null };
+}
+
 function zipEditions(json: RawResponse, surahNumberFallback?: number): Ayah[] {
   const arabic = flattenAyahs(json.data[0]);
   const translation = flattenAyahs(json.data[1]);
@@ -51,14 +78,16 @@ function zipEditions(json: RawResponse, surahNumberFallback?: number): Ayah[] {
   return arabic.map((a, i) => {
     const surahNumber = a.surah?.number ?? surahNumberFallback ?? 0;
     const meta = getSurah(surahNumber);
+    const { arabic: arabicText, bismillah } = splitBismillah(surahNumber, a.numberInSurah, a.text);
     return {
       globalNumber: a.number,
       surahNumber,
       surahName: a.surah?.englishName ?? meta?.name ?? "",
       surahNameArabic: meta?.nameArabic ?? "",
       numberInSurah: a.numberInSurah,
-      arabic: a.text,
+      arabic: arabicText,
       translation: translation[i]?.text ?? "",
+      bismillah,
     };
   });
 }

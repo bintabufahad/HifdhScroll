@@ -5,16 +5,17 @@ An installable web app (PWA) for scrolling through Quran "reels" — Arabic text
 ## How it works
 
 1. Pick a passage on the home screen: by **Surah**, by **Mushaf page**, or by a custom **ayah range**.
-2. Pick a reciter (Murattal: Alafasy, Al-Dossari, Al-Muaiqly, Al-Luhaidan, Al-Ghamdi. Mujawwad: Al-Minshawi, Abdul Basit, Al-Hussary) and a scenery backdrop.
-3. The reel page plays each ayah's audio while the Arabic text and translation animate in; it auto-advances to the next ayah when the audio ends.
+2. Pick which reciters are allowed (Murattal: Alafasy, Al-Dossari, Al-Muaiqly, Al-Luhaidan, Al-Ghamdi. Mujawwad: Al-Minshawi, Abdul Basit, Al-Hussary) — all are selected by default; deselect any you don't want.
+3. Hit **Generate Reels**. Instead of one long reel, the passage is split into many short ones (~10 ayahs each for Surah/Range mode, ~10 reels per page for Page mode), each cycling through a shuffled mix of your selected reciters and one of 16 scenery backdrops, so consecutive reels vary.
+4. Each reel plays in a fixed 9:16 (Instagram Reel) card: audio per ayah, Arabic text and translation animating in, auto-advancing on audio end. Bismillah is detected and shown as its own banner, separate from the ayah text. Navigate between generated reels with the arrows beside/below the card.
 
 ## Data sources
 
 - **Arabic text + English translation**: [AlQuran Cloud API](https://alquran.cloud/api) (`quran-uthmani` + `en.sahih` editions, no API key required).
 - **Recitation audio**: [EveryAyah.com](https://everyayah.com) per-ayah mp3 files (no API key required).
-- **Scenery backdrops**: hand-built CSS/SVG animated scenes — no external images or video files, so they work offline and have no licensing concerns.
+- **Scenery backdrops**: 16 hand-built CSS/SVG scenes (animated nature scenes plus simpler vintage-toned ones like parchment, sepia, and charcoal) — no external images or video files, so they work offline and have no licensing concerns.
 
-Note: Muhammad Al-Luhaidan does not have a confirmed per-ayah audio source on EveryAyah.com yet, so his reel falls back to text-paced timing (no audio) until a source is wired up.
+Note: Muhammad Al-Luhaidan does not have a confirmed per-ayah audio source on EveryAyah.com yet, so reels assigned to him fall back to text-paced timing (no audio) until a source is wired up.
 
 ## Development
 

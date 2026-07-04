@@ -8,8 +8,8 @@ export interface ReelConfig {
   startAyah?: number;
   endSurah?: number;
   endAyah?: number;
-  qari: string;
-  scene: string;
+  /** Reciter ids the user allowed; reels cycle through these. */
+  qaris: string[];
 }
 
 export interface Ayah {
@@ -20,6 +20,8 @@ export interface Ayah {
   numberInSurah: number;
   arabic: string;
   translation: string;
+  /** Set when this ayah opens with (or, for Al-Fatihah's first ayah, IS) the Bismillah, so it can render as its own banner. */
+  bismillah: string | null;
 }
 
 export type QariStyle = "Murattal" | "Mujawwad";
@@ -35,4 +37,12 @@ export interface Qari {
 export interface Scene {
   id: string;
   name: string;
+}
+
+/** One generated short reel: a slice of ayahs paired with a reciter and a backdrop. */
+export interface ReelSegment {
+  id: string;
+  ayahs: Ayah[];
+  qari: Qari;
+  sceneId: string;
 }
