@@ -32,6 +32,23 @@ npm run lint    # eslint
 
 ## Deployment
 
-This is a standard Next.js App Router project — deploy it to [Vercel](https://vercel.com/new) (recommended, zero-config) by importing this GitHub repo, or run `npm run build && npm run start` on any Node 20.9+ host.
+This is a standard Next.js App Router project, deployable to any Node 20.9+ host via `npm run build && npm run start`.
+
+### Render
+
+A `render.yaml` blueprint is included, so this repo deploys with almost no manual setup:
+
+1. On the [Render dashboard](https://dashboard.render.com), click **New +** → **Blueprint**.
+2. Connect this GitHub repo and select the `claude/app-deployment-plan-g48tfj` branch (or `main`, once merged).
+3. Render reads `render.yaml` and provisions a **Web Service** with the build command (`npm install && npm run build`), start command (`npm run start`), and Node version (20.9.0) already filled in.
+4. Click **Apply** / **Create Web Service**. First deploy takes a few minutes; Render gives you a live `https://<service-name>.onrender.com` URL when it's done.
+
+No environment variables or API keys are required — the Quran text/translation and audio sources are public, keyless APIs called directly from the browser.
+
+If you'd rather set it up manually instead of via the blueprint: create a **Web Service**, point it at this repo, set the build command to `npm install && npm run build`, the start command to `npm run start`, and leave the port unset (Render sets `PORT` automatically and `next start` reads it).
+
+### Other hosts
+
+Any platform that runs a persistent Node process works the same way (build command `npm run build`, start command `npm run start`). Vercel also works out of the box if preferred, since it's zero-config for Next.js.
 
 Once deployed, users can "Add to Home Screen" / "Install" from their browser to get an app-like icon and standalone window — this is the PWA install flow referenced in the app plan, replacing an app-store listing.
