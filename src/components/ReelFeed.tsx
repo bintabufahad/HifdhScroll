@@ -97,10 +97,10 @@ export default function ReelFeed({ config }: { config: ReelConfig }) {
           data-index={i}
           className="flex h-dvh w-full snap-start snap-always items-center justify-center"
         >
-          {Math.abs(i - activeIndex) <= 1 ? (
+          {Math.abs(i - activeIndex) <= 2 ? (
             <ReelPlayer segment={segment} isActive={i === activeIndex} reelIndex={i} totalReels={segments.length} />
           ) : (
-            <div className="h-full w-full" />
+            <div className="h-full w-full bg-[#241a12]" />
           )}
         </div>
       ))}

@@ -115,7 +115,7 @@ export default function ReelPlayer({
   }
 
   return (
-    <div className="relative mx-auto flex h-full w-full flex-col overflow-hidden bg-black sm:h-auto sm:max-h-[92vh] sm:aspect-[9/16] sm:w-auto sm:rounded-2xl sm:border-4 sm:border-[#c9a15d]/70 sm:shadow-2xl">
+    <div className="relative mx-auto flex h-full w-full flex-col overflow-hidden bg-black sm:h-[85vh] sm:aspect-[9/16] sm:w-auto sm:rounded-2xl sm:border-4 sm:border-[#c9a15d]/70 sm:shadow-2xl">
       <audio
         ref={audioRef}
         onEnded={goNextAyah}
