@@ -27,9 +27,9 @@ function cyclicShuffleAssign<T>(pool: T[], count: number): T[] {
 }
 
 /**
- * Groups consecutive ayahs into reels of randomized, variable length (never
- * crossing a surah boundary within one reel), covering the whole passage in
- * order - e.g. reel 1 might be ayahs 1-14, reel 2 ayahs 15-28, and so on.
+ * Groups consecutive ayahs into reels of randomized, variable length, never
+ * crossing a surah boundary within one reel - e.g. one chunk might be ayahs
+ * 15-30, the next 31-52, and so on, in order.
  */
 function chunkVariable(ayahs: Ayah[]): Ayah[][] {
   const chunks: Ayah[][] = [];
@@ -55,9 +55,12 @@ function chunkVariable(ayahs: Ayah[]): Ayah[][] {
 }
 
 /**
- * Splits a passage into many reels of varied length sized for memorization,
- * cycling through the selected reciters and a shuffled scenery list so
- * pairings vary as they repeat.
+ * Splits a passage into many reels of varied length sized for memorization.
+ * Every ayah is covered by two independently-chunked passes (so it turns up
+ * in two different reels, each time with different neighbors), and the
+ * reels are then shuffled into a non-sequential order - a reel covering
+ * ayah 15-30 might be followed by one covering ayah 110-125. Reciters and
+ * scenery cycle through a shuffled pool so pairings vary as they repeat.
  */
 export function buildReelSegments(ayahs: Ayah[], selectedQariIds: string[]): ReelSegment[] {
   if (ayahs.length === 0) return [];
@@ -65,7 +68,10 @@ export function buildReelSegments(ayahs: Ayah[], selectedQariIds: string[]): Ree
   const selectedQaris: Qari[] = allQaris.filter((q) => selectedQariIds.includes(q.id));
   const qariPool = selectedQaris.length > 0 ? selectedQaris : allQaris;
 
-  const chunks = chunkVariable(ayahs);
+  const firstPass = chunkVariable(ayahs);
+  const secondPass = chunkVariable(ayahs);
+  const chunks = shuffle([...firstPass, ...secondPass]);
+
   const qariAssignments = cyclicShuffleAssign(qariPool, chunks.length);
   const sceneAssignments = cyclicShuffleAssign(
     scenes.map((s) => s.id),
