@@ -13,8 +13,8 @@ services:
       - key: NODE_ENV
         value: production
       - key: NEXT_PUBLIC_SUPABASE_URL
-        value: https://replace-with-your-project-ref.supabase.co
+        value: https://owuzbmudxjdkdzvpiwfe.supabase.co
       - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
-        value: replace-with-your-supabase-anon-key
+        value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im93dXpibXVkeGpka2R6dnBpd2ZlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0Mzc5NDIsImV4cCI6MjA5OTAxMzk0Mn0.mrGkdLXsa_o0TZO8DaWPf0JpeOnYSQZFboUzFUmYwgI
       - key: NEXT_PUBLIC_DONATE_URL
         value: https://example.com/replace-with-your-real-donation-link
