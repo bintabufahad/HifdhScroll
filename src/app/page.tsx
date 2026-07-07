@@ -1,3 +1,4 @@
+import Link from "next/link";
 import SetupForm from "@/components/SetupForm";
 
 export default function Home() {
@@ -9,6 +10,13 @@ export default function Home() {
         <p className="mt-4 text-[#5a4530]">
           Pick a surah, page, or ayah range — generate a set of short reels with Arabic text, translation, and
           recitation, each in its own scenery.
+        </p>
+        <p className="mt-3 text-sm text-[#7a5a30]">
+          New here?{" "}
+          <Link href="/waitlist" className="underline underline-offset-2 hover:text-[#7a2e2e]">
+            Join the waitlist
+          </Link>{" "}
+          for a 14-day free trial.
         </p>
       </header>
       <SetupForm />

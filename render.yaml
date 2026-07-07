@@ -1,3 +1,9 @@
+databases:
+  - name: hifdhscroll-db
+    plan: free
+    databaseName: hifdhscroll
+    user: hifdhscroll
+
 services:
   - type: web
     name: hifdhscroll
@@ -12,3 +18,11 @@ services:
         value: 20.9.0
       - key: NODE_ENV
         value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: hifdhscroll-db
+          property: connectionString
+      - key: WAITLIST_COOKIE_SECRET
+        generateValue: true
+      - key: NEXT_PUBLIC_DONATE_URL
+        value: https://example.com/replace-with-your-real-donation-link
