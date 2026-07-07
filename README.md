@@ -12,7 +12,7 @@ An installable web app (PWA) for scrolling through Quran "reels" — Arabic text
 ## Data sources
 
 - **Arabic text + English translation**: [AlQuran Cloud API](https://alquran.cloud/api) (`quran-uthmani` + `en.sahih` editions, no API key required). Arabic and translation are fetched as two separate single-edition calls (not the combined multi-edition endpoint), since the combined endpoint isn't reliable on Page mode.
-- **Recitation audio**: [EveryAyah.com](https://everyayah.com) per-ayah mp3 files (no API key required). Folder-name slugs vary in bitrate suffix and aren't all independently confirmed, so each reciter lists a few candidate slugs in `src/lib/qaris.ts`; the player tries them in order and falls through to text-paced timing only once every candidate fails to load.
+- **Recitation audio**: [EveryAyah.com](https://everyayah.com) per-ayah mp3 files (no API key required). Folder-name slugs vary in bitrate suffix and aren't all independently confirmed, so each reciter lists a few candidate slugs in `src/lib/qaris.ts`. If every EveryAyah candidate fails, the player tries [quran.com's](https://api.quran.com) documented reciter/audio API as an independent second source (matching by reciter name), before finally falling through to text-paced timing.
 - **Scenery backdrops**: 16 hand-built CSS/SVG scenes (animated nature scenes plus simpler vintage-toned ones like parchment, sepia, and charcoal) — no external images or video files, so they work offline and have no licensing concerns.
 
 ## Development

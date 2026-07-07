@@ -1,11 +1,23 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import SceneBackground from "@/components/SceneBackground";
 import { getAudioUrlCandidates, estimateReadDurationMs } from "@/lib/audio";
+import { resolveQuranComAudioUrl } from "@/lib/quranComAudio";
 import type { ReelSegment } from "@/lib/types";
 
-export default function ReelPlayer({ segment, isActive }: { segment: ReelSegment; isActive: boolean }) {
+export default function ReelPlayer({
+  segment,
+  isActive,
+  reelIndex,
+  totalReels,
+}: {
+  segment: ReelSegment;
+  isActive: boolean;
+  reelIndex: number;
+  totalReels: number;
+}) {
   const [index, setIndex] = useState(0);
   const [playing, setPlaying] = useState(true);
   const [candidateIndex, setCandidateIndex] = useState(0);
@@ -41,10 +53,10 @@ export default function ReelPlayer({ segment, isActive }: { segment: ReelSegment
     if (!current || done || !isActive) return;
 
     const candidates = getAudioUrlCandidates(segment.qari, current.surahNumber, current.numberInSurah);
-    const url = candidates[candidateIndex];
     const audio = audioRef.current;
 
-    if (url && audio) {
+    function tryUrl(url: string) {
+      if (!audio) return;
       audio.src = url;
       if (playing) {
         audio.play().catch(() => setCandidateIndex((c) => c + 1));
@@ -55,12 +67,31 @@ export default function ReelPlayer({ segment, isActive }: { segment: ReelSegment
           if (audio.paused) setCandidateIndex((c) => c + 1);
         }, 3000);
       }
+    }
+
+    if (candidateIndex < candidates.length) {
+      tryUrl(candidates[candidateIndex]);
       return () => {
         if (timerRef.current) clearTimeout(timerRef.current);
       };
     }
 
-    // Every audio candidate failed (or this reciter has none yet): pace by reading time instead.
+    if (candidateIndex === candidates.length) {
+      // Every EveryAyah.com guess failed - try quran.com's documented reciter/audio
+      // API as an independent second source before giving up on audio entirely.
+      let cancelled = false;
+      resolveQuranComAudioUrl(segment.qari.name, current.surahNumber, current.numberInSurah).then((url) => {
+        if (cancelled) return;
+        if (url) tryUrl(url);
+        else setCandidateIndex((c) => c + 1);
+      });
+      return () => {
+        cancelled = true;
+        if (timerRef.current) clearTimeout(timerRef.current);
+      };
+    }
+
+    // Every source failed (or this reciter has none yet): pace by reading time instead.
     if (playing) {
       const timingText = `${current.bismillah ?? ""} ${current.arabic}`;
       timerRef.current = setTimeout(goNextAyah, estimateReadDurationMs(timingText));
@@ -98,7 +129,15 @@ export default function ReelPlayer({ segment, isActive }: { segment: ReelSegment
       </div>
 
       <div className="relative z-10 shrink-0 px-4 pt-4">
-        <div className="h-1 w-full overflow-hidden rounded-full bg-white/20">
+        <div className="flex items-center justify-between text-sm text-white">
+          <Link href="/" className="rounded-full bg-black/30 px-3 py-1 text-white/90 backdrop-blur">
+            ‹ New reels
+          </Link>
+          <span className="rounded-full bg-black/30 px-3 py-1 text-xs text-white/90 backdrop-blur">
+            {reelIndex + 1} / {totalReels}
+          </span>
+        </div>
+        <div className="mt-3 h-1 w-full overflow-hidden rounded-full bg-white/20">
           <div
             className="h-full bg-amber-300 transition-all"
             style={{ width: `${Math.min(100, (index / ayahs.length) * 100)}%` }}

@@ -6,6 +6,11 @@ import type { Ayah, Qari, ReelSegment } from "./types";
 const MIN_CHUNK = 10;
 const MAX_CHUNK = 20;
 
+interface Segment {
+  start: number;
+  end: number;
+}
+
 function shuffle<T>(items: T[]): T[] {
   const copy = [...items];
   for (let i = copy.length - 1; i > 0; i--) {
@@ -26,16 +31,49 @@ function cyclicShuffleAssign<T>(pool: T[], count: number): T[] {
   return result;
 }
 
-/** A random 10-20 ayah run starting at `startIdx`, clamped to the end of that ayah's surah. */
-function randomChunkFrom(ayahs: Ayah[], startIdx: number): Ayah[] {
-  const surahNumber = ayahs[startIdx].surahNumber;
-  let surahEnd = startIdx;
-  while (surahEnd + 1 < ayahs.length && ayahs[surahEnd + 1].surahNumber === surahNumber) {
-    surahEnd++;
+/** Splits the ayah list into index ranges, one per surah present, so a reel never spans two surahs. */
+function findSurahSegments(ayahs: Ayah[]): Segment[] {
+  const segments: Segment[] = [];
+  let start = 0;
+  for (let i = 1; i <= ayahs.length; i++) {
+    if (i === ayahs.length || ayahs[i].surahNumber !== ayahs[start].surahNumber) {
+      segments.push({ start, end: i - 1 });
+      start = i;
+    }
   }
-  const surahRemaining = surahEnd - startIdx + 1;
-  const size = Math.min(surahRemaining, MIN_CHUNK + Math.floor(Math.random() * (MAX_CHUNK - MIN_CHUNK + 1)));
-  return ayahs.slice(startIdx, startIdx + size);
+  return segments;
+}
+
+/**
+ * A random 10-20 ayah window fully inside `segment` - the window size is
+ * picked first and then given room to fit, so the average lands in the
+ * target range regardless of where the window starts (unlike clamping a
+ * fixed-size window to whatever's left, which biases the average down).
+ * Segments smaller than MIN_CHUNK (e.g. Al-Fatihah) just return the whole
+ * segment - there's no way to reach 10 ayahs from fewer than that.
+ */
+function randomChunkWithin(ayahs: Ayah[], segment: Segment): Ayah[] {
+  const length = segment.end - segment.start + 1;
+  if (length <= MIN_CHUNK) {
+    return ayahs.slice(segment.start, segment.end + 1);
+  }
+  const maxSize = Math.min(MAX_CHUNK, length);
+  const size = MIN_CHUNK + Math.floor(Math.random() * (maxSize - MIN_CHUNK + 1));
+  const maxStartOffset = length - size;
+  const startOffset = Math.floor(Math.random() * (maxStartOffset + 1));
+  const start = segment.start + startOffset;
+  return ayahs.slice(start, start + size);
+}
+
+/** Picks a segment at random, weighted by how many ayahs it contains. */
+function pickWeightedSegment(segments: Segment[], totalAyahs: number): Segment {
+  const r = Math.random() * totalAyahs;
+  let acc = 0;
+  for (const seg of segments) {
+    acc += seg.end - seg.start + 1;
+    if (r < acc) return seg;
+  }
+  return segments[segments.length - 1];
 }
 
 /**
@@ -54,10 +92,11 @@ export function buildReelSegments(ayahs: Ayah[], selectedQariIds: string[]): Ree
   const qariPool = selectedQaris.length > 0 ? selectedQaris : allQaris;
 
   const reelCount = ayahs.length * 2;
+  const surahSegments = findSurahSegments(ayahs);
   const chunks: Ayah[][] = [];
   for (let n = 0; n < reelCount; n++) {
-    const startIdx = Math.floor(Math.random() * ayahs.length);
-    chunks.push(randomChunkFrom(ayahs, startIdx));
+    const segment = pickWeightedSegment(surahSegments, ayahs.length);
+    chunks.push(randomChunkWithin(ayahs, segment));
   }
 
   const qariAssignments = cyclicShuffleAssign(qariPool, chunks.length);

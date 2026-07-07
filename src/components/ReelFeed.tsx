@@ -88,16 +88,6 @@ export default function ReelFeed({ config }: { config: ReelConfig }) {
 
   return (
     <div className="relative h-dvh w-full snap-y snap-mandatory overflow-y-scroll bg-black">
-      <Link
-        href="/"
-        className="fixed left-4 top-4 z-20 rounded-full bg-black/40 px-3 py-1.5 text-sm text-white backdrop-blur"
-      >
-        ‹ New reels
-      </Link>
-      <div className="fixed right-4 top-4 z-20 rounded-full bg-black/40 px-3 py-1.5 text-xs text-white backdrop-blur">
-        {activeIndex + 1} / {segments.length}
-      </div>
-
       {segments.map((segment, i) => (
         <div
           key={segment.id}
@@ -108,7 +98,7 @@ export default function ReelFeed({ config }: { config: ReelConfig }) {
           className="flex h-dvh w-full snap-start snap-always items-center justify-center"
         >
           {Math.abs(i - activeIndex) <= 1 ? (
-            <ReelPlayer segment={segment} isActive={i === activeIndex} />
+            <ReelPlayer segment={segment} isActive={i === activeIndex} reelIndex={i} totalReels={segments.length} />
           ) : (
             <div className="h-full w-full" />
           )}
