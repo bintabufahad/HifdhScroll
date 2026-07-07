@@ -1,10 +1,11 @@
 import type { Qari } from "./types";
 
 // EveryAyah.com folder slugs vary in bitrate suffix and aren't all independently
-// confirmed; each reciter lists candidates in priority order and the player falls
-// through to the next one on a load failure, so a wrong guess degrades instead of
-// silently breaking the reciter. Minshawi falls back to his Murattal recording if
-// the Mujawwad folder isn't found, so at least audio plays even if not that style.
+// confirmed; each reciter lists candidates in priority order, and the player also
+// tries quran.com's documented audio API before giving up on audio for that
+// reciter, so a wrong guess degrades instead of silently breaking the reciter.
+// Minshawi falls back to his Murattal recording if the Mujawwad folder isn't
+// found, so at least audio plays even if not that style.
 export const qaris: Qari[] = [
   { id: "alafasy", name: "Mishary Alafasy", style: "Murattal", everyAyahFolders: ["Alafasy_128kbps", "Alafasy_64kbps"] },
   {
@@ -19,13 +20,43 @@ export const qaris: Qari[] = [
     style: "Murattal",
     everyAyahFolders: ["MaherAlMuaiqly128kbps", "Maher_AlMuaiqly_64kbps", "MaherAlMuaiqly64kbps"],
   },
-  {
-    id: "luhaidan",
-    name: "Muhammad Al-Luhaidan",
-    style: "Murattal",
-    everyAyahFolders: ["Muhammad_al_Luhaidan_128kbps", "Muhammad_Al_Luhaidan_64kbps"],
-  },
   { id: "ghamdi", name: "Saad Al-Ghamdi", style: "Murattal", everyAyahFolders: ["Ghamadi_40kbps", "Ghamdi_40kbps"] },
+  {
+    id: "sudais",
+    name: "Abdul Rahman Al-Sudais",
+    style: "Murattal",
+    everyAyahFolders: ["Abdurrahmaan_As-Sudais_192kbps", "Sudais_128kbps"],
+  },
+  {
+    id: "shuraim",
+    name: "Saud Al-Shuraim",
+    style: "Murattal",
+    everyAyahFolders: ["Saood_ash-Shuraym_128kbps", "Shuraim_128kbps"],
+  },
+  {
+    id: "shatri",
+    name: "Abu Bakr Al-Shatri",
+    style: "Murattal",
+    everyAyahFolders: ["Abu_Bakr_Ash-Shaatree_128kbps", "AbuBakrAlShatri128kbps"],
+  },
+  {
+    id: "hudhaify",
+    name: "Ali Al-Hudhaify",
+    style: "Murattal",
+    everyAyahFolders: ["Hudhaify_128kbps", "Hudhaify_32kbps"],
+  },
+  {
+    id: "ayyoub",
+    name: "Muhammad Ayyoub",
+    style: "Murattal",
+    everyAyahFolders: ["Muhammad_Ayyoub_128kbps", "Muhammad_Ayyoub_64kbps"],
+  },
+  {
+    id: "ajmy",
+    name: "Ahmed Al-Ajmy",
+    style: "Murattal",
+    everyAyahFolders: ["Ahmed_ibn_Ali_al-Ajamy_128kbps", "ahmed_ibn_ali_al_ajamy_64kbps"],
+  },
   {
     id: "minshawi",
     name: "Al-Minshawi",
