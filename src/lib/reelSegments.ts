@@ -2,10 +2,6 @@ import { qaris as allQaris } from "./qaris";
 import { scenes } from "./scenes";
 import type { Ayah, Qari, ReelSegment } from "./types";
 
-/** Each reel spans a randomized run of consecutive ayahs in this range, not a fixed size. */
-const MIN_CHUNK = 10;
-const MAX_CHUNK = 30;
-
 function shuffle<T>(items: T[]): T[] {
   const copy = [...items];
   for (let i = copy.length - 1; i > 0; i--) {
@@ -27,40 +23,12 @@ function cyclicShuffleAssign<T>(pool: T[], count: number): T[] {
 }
 
 /**
- * Groups consecutive ayahs into reels of randomized, variable length, never
- * crossing a surah boundary within one reel - e.g. one chunk might be ayahs
- * 15-30, the next 31-52, and so on, in order.
- */
-function chunkVariable(ayahs: Ayah[]): Ayah[][] {
-  const chunks: Ayah[][] = [];
-  let i = 0;
-  while (i < ayahs.length) {
-    const surahNumber = ayahs[i].surahNumber;
-    let surahEnd = i;
-    while (surahEnd + 1 < ayahs.length && ayahs[surahEnd + 1].surahNumber === surahNumber) {
-      surahEnd++;
-    }
-    const surahRemaining = surahEnd - i + 1;
-
-    let size = Math.min(surahRemaining, MIN_CHUNK + Math.floor(Math.random() * (MAX_CHUNK - MIN_CHUNK + 1)));
-    if (surahRemaining - size > 0 && surahRemaining - size < MIN_CHUNK) {
-      // Avoid leaving a too-small leftover chunk within this surah.
-      size = surahRemaining;
-    }
-
-    chunks.push(ayahs.slice(i, i + size));
-    i += size;
-  }
-  return chunks;
-}
-
-/**
- * Splits a passage into many reels of varied length sized for memorization.
- * Every ayah is covered by two independently-chunked passes (so it turns up
- * in two different reels, each time with different neighbors), and the
- * reels are then shuffled into a non-sequential order - a reel covering
- * ayah 15-30 might be followed by one covering ayah 110-125. Reciters and
- * scenery cycle through a shuffled pool so pairings vary as they repeat.
+ * Splits a passage into 2x as many reels as it has ayahs: each ayah gets its
+ * own single-ayah reel, twice over (so it's reviewed twice, each time with a
+ * different reciter/scenery pairing), and the combined list is shuffled into
+ * non-sequential order - a reel for ayah 30 might be followed by one for
+ * ayah 112, then one for ayah 58. Reciters and scenery cycle through a
+ * shuffled pool so pairings vary as they repeat.
  */
 export function buildReelSegments(ayahs: Ayah[], selectedQariIds: string[]): ReelSegment[] {
   if (ayahs.length === 0) return [];
@@ -68,9 +36,8 @@ export function buildReelSegments(ayahs: Ayah[], selectedQariIds: string[]): Ree
   const selectedQaris: Qari[] = allQaris.filter((q) => selectedQariIds.includes(q.id));
   const qariPool = selectedQaris.length > 0 ? selectedQaris : allQaris;
 
-  const firstPass = chunkVariable(ayahs);
-  const secondPass = chunkVariable(ayahs);
-  const chunks = shuffle([...firstPass, ...secondPass]);
+  const singleAyahReels = ayahs.map((a) => [a]);
+  const chunks = shuffle([...singleAyahReels, ...singleAyahReels]);
 
   const qariAssignments = cyclicShuffleAssign(qariPool, chunks.length);
   const sceneAssignments = cyclicShuffleAssign(
