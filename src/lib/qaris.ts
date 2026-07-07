@@ -3,7 +3,8 @@ import type { Qari } from "./types";
 // EveryAyah.com folder slugs vary in bitrate suffix and aren't all independently
 // confirmed; each reciter lists candidates in priority order and the player falls
 // through to the next one on a load failure, so a wrong guess degrades instead of
-// silently breaking the reciter.
+// silently breaking the reciter. Minshawi falls back to his Murattal recording if
+// the Mujawwad folder isn't found, so at least audio plays even if not that style.
 export const qaris: Qari[] = [
   { id: "alafasy", name: "Mishary Alafasy", style: "Murattal", everyAyahFolders: ["Alafasy_128kbps", "Alafasy_64kbps"] },
   {
@@ -29,7 +30,7 @@ export const qaris: Qari[] = [
     id: "minshawi",
     name: "Al-Minshawi",
     style: "Mujawwad",
-    everyAyahFolders: ["Minshawy_Mujawwad_192kbps", "Minshawy_Mujawwad_128kbps", "Minshawy_Mujawwad_64kbps"],
+    everyAyahFolders: ["Minshawy_Mujawwad_128kbps", "Minshawy_Mujawwad_192kbps", "Minshawy_Murattal_128kbps"],
   },
   {
     id: "abdulbasit",
@@ -41,7 +42,7 @@ export const qaris: Qari[] = [
     id: "hussary",
     name: "Al-Hussary",
     style: "Mujawwad",
-    everyAyahFolders: ["Husary_Mujawwad_192kbps", "Husary_Mujawwad_128kbps", "Husary_Mujawwad_64kbps", "Husary_Muallim_128kbps"],
+    everyAyahFolders: ["Husary_Mujawwad_128kbps", "Husary_Mujawwad_192kbps", "Husary_128kbps"],
   },
 ];
 

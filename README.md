@@ -5,8 +5,8 @@ An installable web app (PWA) for scrolling through Quran "reels" — Arabic text
 ## How it works
 
 1. Pick a passage on the home screen: by **Surah**, by **Mushaf page**, or by a custom **ayah range**.
-2. Pick which reciters are allowed (Murattal: Alafasy, Al-Dossari, Al-Muaiqly, Al-Luhaidan, Al-Ghamdi. Mujawwad: Al-Minshawi, Abdul Basit, Al-Hussary) — all are selected by default; deselect any you don't want. Reel count never depends on how many reciters are selected.
-3. Hit **Generate Reels**. The passage is split into many short, memorization-sized reels — normally one ayah per reel, occasionally two when an ayah is very short (a few words or less) — each cycling through a shuffled mix of your selected reciters and one of 16 scenery backdrops, reshuffled every lap so pairings vary as they repeat. The same chunking applies to Surah, Page, and Range modes.
+2. Pick which reciters are allowed (Murattal: Alafasy, Al-Dossari, Al-Muaiqly, Al-Luhaidan, Al-Ghamdi. Mujawwad: Al-Minshawi, Abdul Basit, Al-Hussary) — all are selected by default; deselect any you don't want.
+3. Hit **Generate Reels**. The passage is split into reels of randomized, variable length (10-30 consecutive ayahs each, never crossing a surah boundary), covering the whole passage in order — e.g. reel 1 might be ayahs 1-14, reel 2 ayahs 15-28. Each reel cycles through a shuffled mix of your selected reciters and one of 16 scenery backdrops, reshuffled every lap so pairings vary as they repeat. The same chunking applies to Surah, Page, and Range modes; reel count scales with passage length and never depends on how many reciters are selected.
 4. Reels play in a fullscreen, vertically-scrolling feed like Instagram Reels/TikTok — scroll or swipe down to move to the next one, no buttons. Each reel auto-plays its ayah's audio, Arabic text and translation animate in, and it auto-advances on audio end. Bismillah is detected and shown as its own banner, separate from the ayah text.
 
 ## Data sources

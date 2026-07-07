@@ -2,13 +2,9 @@ import { qaris as allQaris } from "./qaris";
 import { scenes } from "./scenes";
 import type { Ayah, Qari, ReelSegment } from "./types";
 
-/**
- * Below this many (space-stripped) characters, an ayah is short enough to share
- * a reel with its neighbor instead of standing alone - keeps very short ayahs
- * (single words, disjointed letters) from becoming a near-blank reel.
- */
-const MIN_STANDALONE_CHARS = 15;
-const MAX_AYAHS_PER_REEL = 2;
+/** Each reel spans a randomized run of consecutive ayahs in this range, not a fixed size. */
+const MIN_CHUNK = 10;
+const MAX_CHUNK = 30;
 
 function shuffle<T>(items: T[]): T[] {
   const copy = [...items];
@@ -30,33 +26,38 @@ function cyclicShuffleAssign<T>(pool: T[], count: number): T[] {
   return result;
 }
 
-function weightOf(ayah: Ayah): number {
-  return (ayah.bismillah?.length ?? 0) + ayah.arabic.replace(/\s/g, "").length;
-}
-
 /**
- * Groups consecutive ayahs into short, memorization-sized reels: normally one
- * ayah per reel, occasionally two when the first is too short to stand alone.
+ * Groups consecutive ayahs into reels of randomized, variable length (never
+ * crossing a surah boundary within one reel), covering the whole passage in
+ * order - e.g. reel 1 might be ayahs 1-14, reel 2 ayahs 15-28, and so on.
  */
-function chunkForMemorization(ayahs: Ayah[]): Ayah[][] {
+function chunkVariable(ayahs: Ayah[]): Ayah[][] {
   const chunks: Ayah[][] = [];
   let i = 0;
   while (i < ayahs.length) {
-    const group = [ayahs[i]];
-    if (weightOf(ayahs[i]) < MIN_STANDALONE_CHARS && group.length < MAX_AYAHS_PER_REEL && i + 1 < ayahs.length) {
-      group.push(ayahs[i + 1]);
-      i += 2;
-    } else {
-      i += 1;
+    const surahNumber = ayahs[i].surahNumber;
+    let surahEnd = i;
+    while (surahEnd + 1 < ayahs.length && ayahs[surahEnd + 1].surahNumber === surahNumber) {
+      surahEnd++;
     }
-    chunks.push(group);
+    const surahRemaining = surahEnd - i + 1;
+
+    let size = Math.min(surahRemaining, MIN_CHUNK + Math.floor(Math.random() * (MAX_CHUNK - MIN_CHUNK + 1)));
+    if (surahRemaining - size > 0 && surahRemaining - size < MIN_CHUNK) {
+      // Avoid leaving a too-small leftover chunk within this surah.
+      size = surahRemaining;
+    }
+
+    chunks.push(ayahs.slice(i, i + size));
+    i += size;
   }
   return chunks;
 }
 
 /**
- * Splits a passage into many short reels sized for memorization, cycling through
- * the selected reciters and a shuffled scenery list so pairings vary as they repeat.
+ * Splits a passage into many reels of varied length sized for memorization,
+ * cycling through the selected reciters and a shuffled scenery list so
+ * pairings vary as they repeat.
  */
 export function buildReelSegments(ayahs: Ayah[], selectedQariIds: string[]): ReelSegment[] {
   if (ayahs.length === 0) return [];
@@ -64,7 +65,7 @@ export function buildReelSegments(ayahs: Ayah[], selectedQariIds: string[]): Ree
   const selectedQaris: Qari[] = allQaris.filter((q) => selectedQariIds.includes(q.id));
   const qariPool = selectedQaris.length > 0 ? selectedQaris : allQaris;
 
-  const chunks = chunkForMemorization(ayahs);
+  const chunks = chunkVariable(ayahs);
   const qariAssignments = cyclicShuffleAssign(qariPool, chunks.length);
   const sceneAssignments = cyclicShuffleAssign(
     scenes.map((s) => s.id),

@@ -46,8 +46,18 @@ export default function ReelPlayer({ segment, isActive }: { segment: ReelSegment
 
     if (url && audio) {
       audio.src = url;
-      if (playing) audio.play().catch(() => setCandidateIndex((c) => c + 1));
-      return;
+      if (playing) {
+        audio.play().catch(() => setCandidateIndex((c) => c + 1));
+        // A 404 doesn't always reject play() or fire an error event promptly (or at
+        // all, if the request just hangs) - if playback hasn't actually started
+        // within a few seconds, treat this candidate as dead and move to the next.
+        timerRef.current = setTimeout(() => {
+          if (audio.paused) setCandidateIndex((c) => c + 1);
+        }, 3000);
+      }
+      return () => {
+        if (timerRef.current) clearTimeout(timerRef.current);
+      };
     }
 
     // Every audio candidate failed (or this reciter has none yet): pace by reading time instead.
@@ -74,7 +84,7 @@ export default function ReelPlayer({ segment, isActive }: { segment: ReelSegment
   }
 
   return (
-    <div className="relative mx-auto flex h-full w-full flex-col overflow-hidden bg-black sm:max-w-[480px] sm:rounded-2xl sm:border-4 sm:border-[#c9a15d]/70 sm:shadow-2xl">
+    <div className="relative mx-auto flex h-full w-full flex-col overflow-hidden bg-black sm:h-auto sm:max-h-[92vh] sm:aspect-[9/16] sm:w-auto sm:rounded-2xl sm:border-4 sm:border-[#c9a15d]/70 sm:shadow-2xl">
       <audio
         ref={audioRef}
         onEnded={goNextAyah}
