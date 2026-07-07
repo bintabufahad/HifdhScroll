@@ -1,16 +1,29 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { decodeTrialCookie, isTrialActive, TRIAL_COOKIE_NAME } from "@/lib/trialCookie";
+import { updateSession } from "@/lib/supabase/middleware";
 
-export function proxy(request: NextRequest) {
-  const payload = decodeTrialCookie(request.cookies.get(TRIAL_COOKIE_NAME)?.value);
-  if (!isTrialActive(payload)) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/waitlist";
-    url.search = "";
-    url.searchParams.set("from", "trial");
-    return NextResponse.redirect(url);
+export async function proxy(request: NextRequest) {
+  const { supabaseResponse, user, supabase } = await updateSession(request);
+
+  if (!user) {
+    return redirectToWaitlist(request);
   }
-  return NextResponse.next();
+
+  const { data: profile } = await supabase.from("profiles").select("trial_ends_at").eq("id", user.id).single();
+
+  const trialEndsAt = profile?.trial_ends_at ? new Date(profile.trial_ends_at).getTime() : 0;
+  if (trialEndsAt <= Date.now()) {
+    return redirectToWaitlist(request);
+  }
+
+  return supabaseResponse;
+}
+
+function redirectToWaitlist(request: NextRequest) {
+  const url = request.nextUrl.clone();
+  url.pathname = "/waitlist";
+  url.search = "";
+  url.searchParams.set("from", "trial");
+  return NextResponse.redirect(url);
 }
 
 export const config = {

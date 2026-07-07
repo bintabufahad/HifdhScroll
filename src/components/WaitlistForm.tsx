@@ -1,14 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 
 const DONATE_URL = process.env.NEXT_PUBLIC_DONATE_URL;
 
 export default function WaitlistForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const cameFromExpiredTrial = searchParams.get("from") === "trial";
+  const cameFromAuthError = searchParams.get("from") === "auth-error";
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -16,49 +17,41 @@ export default function WaitlistForm() {
   const [wantsToDonate, setWantsToDonate] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
-  const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null);
+  const [sent, setSent] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSubmitting(true);
     setError("");
-    try {
-      const res = await fetch("/api/waitlist", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, suggestion, wantsToDonate }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error ?? "Something went wrong.");
-        setSubmitting(false);
-        return;
-      }
-      setTrialEndsAt(data.trialEndsAt);
-    } catch {
-      setError("Network error. Please try again.");
+
+    const supabase = createClient();
+    const { error: signInError } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        data: {
+          name: name.trim() || undefined,
+          suggestion: suggestion.trim() || undefined,
+          wants_to_donate: wantsToDonate,
+        },
+      },
+    });
+
+    if (signInError) {
+      setError(signInError.message || "Something went wrong. Please try again.");
       setSubmitting(false);
+      return;
     }
+    setSent(true);
   }
 
-  if (trialEndsAt) {
-    const endDate = new Date(trialEndsAt).toLocaleDateString(undefined, {
-      month: "long",
-      day: "numeric",
-      year: "numeric",
-    });
+  if (sent) {
     return (
       <div className="mx-auto flex w-full max-w-md flex-col items-center gap-4 text-center">
-        <h2 className="font-display text-2xl font-bold text-[#3b2a1a]">You&apos;re in!</h2>
+        <h2 className="font-display text-2xl font-bold text-[#3b2a1a]">Check your email</h2>
         <p className="text-[#5a4530]">
-          Your 14-day free trial is active until <strong>{endDate}</strong>. Enjoy generating reels.
+          We sent a sign-in link to <strong>{email}</strong>. Open it to activate your 14-day free trial.
         </p>
-        <button
-          onClick={() => router.push("/")}
-          className="w-full rounded-full bg-[#7a2e2e] py-3 font-display font-semibold text-[#f5ecd7] hover:bg-[#8a3a3a]"
-        >
-          Start generating reels
-        </button>
         {DONATE_URL && (
           <a
             href={DONATE_URL}
@@ -83,6 +76,11 @@ export default function WaitlistForm() {
       {cameFromExpiredTrial && (
         <p className="rounded-lg border border-[#c9a15d]/40 bg-[#f5ecd7] px-4 py-3 text-sm text-[#5a4530]">
           Your free trial has ended. Join below to hear about what&apos;s next.
+        </p>
+      )}
+      {cameFromAuthError && (
+        <p className="rounded-lg border border-red-800/30 bg-red-50 px-4 py-3 text-sm text-red-900">
+          That sign-in link didn&apos;t work (it may have expired). Please request a new one below.
         </p>
       )}
 
@@ -125,7 +123,7 @@ export default function WaitlistForm() {
         disabled={submitting}
         className="w-full rounded-full bg-[#7a2e2e] py-3 font-display font-semibold text-[#f5ecd7] hover:bg-[#8a3a3a] disabled:opacity-60"
       >
-        {submitting ? "Joining…" : "Join & start my free trial"}
+        {submitting ? "Sending…" : "Email me a sign-in link"}
       </button>
     </form>
   );
