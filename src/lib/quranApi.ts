@@ -94,7 +94,7 @@ async function fetchSurahFull(surahNumber: number): Promise<Ayah[]> {
   return zipEditions(arabic, translation, surahNumber);
 }
 
-async function fetchSurahRange(startSurah: number, startAyah: number, endSurah: number, endAyah: number): Promise<Ayah[]> {
+export async function fetchSurahRange(startSurah: number, startAyah: number, endSurah: number, endAyah: number): Promise<Ayah[]> {
   const result: Ayah[] = [];
   for (let s = startSurah; s <= endSurah; s++) {
     const meta = getSurah(s);

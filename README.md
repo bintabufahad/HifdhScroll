@@ -17,14 +17,25 @@ This runs on [Supabase](https://supabase.com) (Auth + Postgres) rather than a cu
 
 - **Auth**: Supabase's email magic-link (OTP) sign-in. `src/lib/supabase/client.ts` / `server.ts` / `middleware.ts` are the standard `@supabase/ssr` client setup for the Next.js App Router.
 - **Trial data**: a `profiles` table (see `supabase/migrations/001_profiles_and_trial.sql`) with `trial_starts_at`/`trial_ends_at`, auto-created by a database trigger the moment someone signs up, copying the name/suggestion/donate-interest they entered from their auth metadata. Protected by Row Level Security so a user can only ever read their own row.
-- **Gating**: `src/proxy.ts` refreshes the Supabase session and checks `trial_ends_at` on every `/reel` request, redirecting to `/waitlist` if there's no signed-in user or their trial has expired.
+- **Gating**: `src/proxy.ts` refreshes the Supabase session and checks `trial_ends_at` on every `/reel` and `/feedback` request. No signed-in user → `/waitlist`. Trial still active → `/reel` works and `/feedback` bounces to `/`. Trial expired and feedback not yet given → `/reel` redirects to `/feedback`. Trial expired and feedback already given (the one-time 30-day bonus already used) → back to `/waitlist`.
 - **Magic-link callback**: `src/app/auth/callback/route.ts` exchanges the emailed code for a session, per Supabase's documented PKCE flow.
-- There's no paid tier or renewal flow yet — after 14 days, `/reel` simply redirects back to the waitlist page.
+- There's no paid tier or renewal flow — once the 14-day trial and the one-time 30-day feedback bonus are both used up, `/reel` redirects back to the waitlist page.
+
+### Post-trial feedback → 30 more days
+
+When the 14-day trial expires, `/reel` redirects to `/feedback` (see `src/components/FeedbackForm.tsx`) instead of straight back to the waitlist. The page:
+
+- Explains, in a respectful Islamic tone, that the trial has ended and thanks the user for their time.
+- Shows two verses fetched live through the same AlQuran Cloud integration used for reels — An-Nahl 16:125 and Fussilat 41:33 (`src/components/DawahVerses.tsx`) — both about the virtue of calling others to the Qur'an, framing a review as an invitation that might turn someone's Instagram scrolling into Qur'an reading instead.
+- Asks for a star rating, a short review, and — separately — what features or value would make the app worth paying for, since that's genuinely useful product feedback.
+- On submit, calls the `submit_feedback_and_extend_trial` Postgres function (see `supabase/migrations/002_feedback_and_trial_extension.sql`), which records the feedback and pushes `trial_ends_at` out by 30 days, then redirects home.
+
+This only ever fires once per account: the function refuses to run again if `feedback_submitted_at` is already set, and direct client updates to `trial_ends_at` are no longer possible at all — migration 002 drops the old "users can update their own profile" policy (which would have let anyone extend their own trial from devtools) so the trial can now only change through this server-side function.
 
 ### Supabase setup (one-time)
 
 1. Create a free project at [supabase.com](https://supabase.com).
-2. In the SQL Editor, run `supabase/migrations/001_profiles_and_trial.sql`.
+2. In the SQL Editor, run `supabase/migrations/001_profiles_and_trial.sql`, then run `supabase/migrations/002_feedback_and_trial_extension.sql` (adds the post-trial feedback flow and the 30-day extension function — see below).
 3. In **Project Settings → API**, copy the **Project URL** and **anon/public key**.
 4. Confirm **Authentication → Providers → Email** has OTP/magic-link enabled (on by default).
 5. Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` to those values, locally and/or on Render (see below).
