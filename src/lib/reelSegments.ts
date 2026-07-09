@@ -5,6 +5,14 @@ import type { Ayah, Qari, ReelSegment } from "./types";
 /** Each reel spans a randomized run of consecutive ayahs in this range. */
 const MIN_CHUNK = 10;
 const MAX_CHUNK = 20;
+/**
+ * Segments at or below this length (a short surah like Al-Fatihah, or a
+ * typical Mushaf page) can't fit a 10-20 ayah window, so they use a
+ * proportional window instead - see randomChunkWithin.
+ */
+const SHORT_SEGMENT_THRESHOLD = MAX_CHUNK;
+const SHORT_SEGMENT_MIN_PROPORTION = 0.3;
+const ABSOLUTE_MIN_CHUNK = 3;
 
 interface Segment {
   start: number;
@@ -45,20 +53,34 @@ function findSurahSegments(ayahs: Ayah[]): Segment[] {
 }
 
 /**
- * A random 10-20 ayah window fully inside `segment` - the window size is
- * picked first and then given room to fit, so the average lands in the
- * target range regardless of where the window starts (unlike clamping a
- * fixed-size window to whatever's left, which biases the average down).
- * Segments smaller than MIN_CHUNK (e.g. Al-Fatihah) just return the whole
- * segment - there's no way to reach 10 ayahs from fewer than that.
+ * A random window fully inside `segment` - the window size is picked first
+ * and then given room to fit, so the average lands in the target range
+ * regardless of where the window starts (unlike clamping a fixed-size
+ * window to whatever's left, which biases the average down).
+ *
+ * Segments at or below SHORT_SEGMENT_THRESHOLD (a short surah like
+ * Al-Fatihah, or a typical Mushaf page) can't fit the normal 10-20 ayah
+ * window, so the window size instead scales with the segment's own length -
+ * anywhere from ~30% of it up to the full thing - so reels for a short
+ * surah or a single page still vary in start/end instead of every reel
+ * just being the whole segment read start to finish.
  */
 function randomChunkWithin(ayahs: Ayah[], segment: Segment): Ayah[] {
   const length = segment.end - segment.start + 1;
-  if (length <= MIN_CHUNK) {
-    return ayahs.slice(segment.start, segment.end + 1);
+
+  if (length <= SHORT_SEGMENT_THRESHOLD) {
+    const sizeMin = Math.min(length, Math.max(ABSOLUTE_MIN_CHUNK, Math.round(length * SHORT_SEGMENT_MIN_PROPORTION)));
+    if (sizeMin >= length) {
+      return ayahs.slice(segment.start, segment.end + 1);
+    }
+    const size = sizeMin + Math.floor(Math.random() * (length - sizeMin + 1));
+    const maxStartOffset = length - size;
+    const startOffset = Math.floor(Math.random() * (maxStartOffset + 1));
+    const start = segment.start + startOffset;
+    return ayahs.slice(start, start + size);
   }
-  const maxSize = Math.min(MAX_CHUNK, length);
-  const size = MIN_CHUNK + Math.floor(Math.random() * (maxSize - MIN_CHUNK + 1));
+
+  const size = MIN_CHUNK + Math.floor(Math.random() * (MAX_CHUNK - MIN_CHUNK + 1));
   const maxStartOffset = length - size;
   const startOffset = Math.floor(Math.random() * (maxStartOffset + 1));
   const start = segment.start + startOffset;
@@ -78,12 +100,13 @@ function pickWeightedSegment(segments: Segment[], totalAyahs: number): Segment {
 
 /**
  * Generates 2x as many reels as the passage has ayahs, each spanning a
- * randomized 10-20 ayah run (never crossing a surah boundary). Reels are
- * random overlapping windows rather than a clean partition, so a given ayah
- * typically turns up in several different reels, each time with different
- * neighbors, reciter, and scenery - repeated exposure in varied context for
- * memorization. Presentation order is inherently non-sequential since each
- * window's starting point is picked independently at random.
+ * randomized ayah run (10-20 ayahs, or a proportional window for short
+ * surahs/pages - see randomChunkWithin) that never crosses a surah boundary.
+ * Reels are random overlapping windows rather than a clean partition, so a
+ * given ayah typically turns up in several different reels, each time with
+ * different neighbors, reciter, and scenery - repeated exposure in varied
+ * context for memorization. Presentation order is inherently non-sequential
+ * since each window's starting point is picked independently at random.
  */
 export function buildReelSegments(ayahs: Ayah[], selectedQariIds: string[]): ReelSegment[] {
   if (ayahs.length === 0) return [];
