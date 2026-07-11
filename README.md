@@ -4,20 +4,20 @@ An installable web app (PWA) for scrolling through Quran "reels" — Arabic text
 
 ## How it works
 
-1. Pick a passage on the home screen: by **Surah**, by **Mushaf page**, or by a custom **ayah range**.
+1. Pick a passage on the home screen: by **Surah** (defaults to Al-Baqarah), by **Mushaf page**, or by a custom **ayah range**.
 2. Pick which reciters are allowed — 12 total (Murattal: Alafasy, Al-Dossari, Al-Muaiqly, Al-Ghamdi, Al-Sudais, Al-Shuraim, Al-Shatri, Al-Hudhaify, Ayyoub. Mujawwad: Al-Minshawi, Abdul Basit, Al-Hussary) — all are selected by default; deselect any you don't want.
-3. Hit **Generate Reels**. For X ayahs in the passage, exactly 2X reels are generated, each a randomized 10-20 ayah run (never crossing a surah boundary). These are random overlapping windows rather than a clean partition, so any given ayah typically turns up in several different reels with different neighbors, reciter, and scenery each time — repeated exposure in varied context for memorization — and presentation is inherently non-sequential (a reel for ayah 30 might be followed by one for ayah 112). The same logic applies to Surah, Page, and Range modes; reel count scales with passage length and never depends on how many reciters are selected.
+3. Hit **Generate Reels**. For X ayahs in the passage, exactly 2X reels are generated, each a randomized 10-20 ayah run (never crossing a surah boundary; shorter surahs and Mushaf pages instead get a proportional window, so a short surah like Al-Fatihah still varies in start/end instead of every reel just being the whole thing — see `src/lib/reelSegments.ts`). These are random overlapping windows rather than a clean partition, so any given ayah typically turns up in several different reels with different neighbors, reciter, and scenery each time — repeated exposure in varied context for memorization — and presentation is inherently non-sequential (a reel for ayah 30 might be followed by one for ayah 112). The same logic applies to Surah, Page, and Range modes; reel count scales with passage length and never depends on how many reciters are selected.
 4. Reels play in a fullscreen, vertically-scrolling feed like Instagram Reels/TikTok — scroll or swipe down to move to the next one, no buttons. Each reel auto-plays its ayah's audio, Arabic text and translation animate in, and it auto-advances on audio end. Bismillah is detected and shown as its own banner, separate from the ayah text.
 
 ## Waitlist and free trial
 
-Generating reels (`/reel`) requires an active trial. New visitors are pointed to `/waitlist` (a link on the home page, or an automatic redirect if they try `/reel` directly) to sign in with just an email (name, a suggestion/feedback note, and "I'd like to donate" are all optional) — no password. They get a magic link by email; clicking it signs them in and starts a 14-day free trial immediately.
+Generating reels (`/reel`) requires an active trial. New visitors are pointed to `/waitlist` (a link on the home page, or an automatic redirect if they try `/reel` directly) to sign in with just an email (name and a suggestion/feedback note are both optional) — no password. They get a magic link by email; clicking it signs them in and starts a 14-day free trial immediately.
 
 This runs on [Supabase](https://supabase.com) (Auth + Postgres) rather than a custom-built login system:
 
 - **Auth**: Supabase's email magic-link (OTP) sign-in. `src/lib/supabase/client.ts` / `server.ts` / `middleware.ts` are the standard `@supabase/ssr` client setup for the Next.js App Router.
-- **Trial data**: a `profiles` table (see `supabase/migrations/001_profiles_and_trial.sql`) with `trial_starts_at`/`trial_ends_at`, auto-created by a database trigger the moment someone signs up, copying the name/suggestion/donate-interest they entered from their auth metadata. Protected by Row Level Security so a user can only ever read their own row.
-- **Gating**: `src/proxy.ts` refreshes the Supabase session and checks `trial_ends_at` on every `/reel` and `/feedback` request. No signed-in user → `/waitlist`. Trial still active → `/reel` works and `/feedback` bounces to `/`. Trial expired and feedback not yet given → `/reel` redirects to `/feedback`. Trial expired and feedback already given (the one-time 30-day bonus already used) → back to `/waitlist`.
+- **Trial data**: a `profiles` table (see `supabase/migrations/001_profiles_and_trial.sql`) with `trial_starts_at`/`trial_ends_at`, auto-created by a database trigger the moment someone signs up, copying the name/suggestion they entered from their auth metadata. Protected by Row Level Security so a user can only ever read their own row.
+- **Gating**: `src/proxy.ts` refreshes the Supabase session and checks `trial_ends_at` on every `/reel` and `/feedback` request. No signed-in user → `/waitlist` (`from=signin`, a neutral "sign in" prompt — not shown as an expired trial). Trial still active → `/reel` works and `/feedback` bounces to `/`. Trial expired and feedback not yet given → `/reel` redirects to `/feedback`. Trial expired and feedback already given (the one-time 30-day bonus already used) → back to `/waitlist` (`from=trial-ended`, the "your trial has ended" message). These two waitlist reasons are deliberately distinct so a brand-new visitor is never told their (nonexistent) trial "has ended."
 - **Magic-link callback**: `src/app/auth/callback/route.ts` exchanges the emailed code for a session, per Supabase's documented PKCE flow.
 - There's no paid tier or renewal flow — once the 14-day trial and the one-time 30-day feedback bonus are both used up, `/reel` redirects back to the waitlist page.
 
@@ -35,7 +35,7 @@ This only ever fires once per account: the function refuses to run again if `fee
 ### Supabase setup (one-time)
 
 1. Create a free project at [supabase.com](https://supabase.com).
-2. In the SQL Editor, run `supabase/migrations/001_profiles_and_trial.sql`, then run `supabase/migrations/002_feedback_and_trial_extension.sql` (adds the post-trial feedback flow and the 30-day extension function — see below).
+2. In the SQL Editor, run `supabase/migrations/001_profiles_and_trial.sql`, then `supabase/migrations/002_feedback_and_trial_extension.sql` (adds the post-trial feedback flow and the 30-day extension function — see below), then `supabase/migrations/003_remove_donation.sql` (drops the now-unused donation column/field).
 3. In **Project Settings → API**, copy the **Project URL** and **anon/public key**.
 4. Confirm **Authentication → Providers → Email** has OTP/magic-link enabled (on by default).
 5. Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` to those values, locally and/or on Render (see below).
@@ -58,7 +58,6 @@ Open http://localhost:3000. The waitlist/trial gating needs Supabase credentials
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-NEXT_PUBLIC_DONATE_URL=https://your-donation-link  # optional; the donate link only shows if this is set
 ```
 
 Without these, everything except the waitlist sign-in and `/reel` access gating still works.
@@ -80,13 +79,13 @@ A `render.yaml` blueprint is included:
 2. Connect this GitHub repo and select the `claude/app-deployment-plan-g48tfj` branch (or `main`, once merged).
 3. Render reads `render.yaml` and provisions a **Web Service** (build command `npm ci --include=dev && npm run build`, start command `npm run start`, Node 20.9.0).
 4. Click **Apply**. First deploy takes a few minutes; Render gives you a live `https://<service-name>.onrender.com` URL when it's done.
-5. **Before (or right after) deploying**, replace the three placeholder environment variables in the Render service settings with real values: `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` from your [Supabase project](#supabase-setup-one-time), and `NEXT_PUBLIC_DONATE_URL` with your actual donation link (Ko-fi, PayPal.me, Buy Me a Coffee, etc.). None of these can be known ahead of time, so `render.yaml` ships obvious placeholders rather than working values.
+5. **Before (or right after) deploying**, replace the placeholder environment variables in the Render service settings with real values: `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` from your [Supabase project](#supabase-setup-one-time). These can't be known ahead of time, so `render.yaml` ships obvious placeholders rather than working values.
 
 Also add your deployed URL (`https://<service-name>.onrender.com`) to Supabase's **Authentication → URL Configuration → Redirect URLs**, so magic links are allowed to redirect back to it.
 
 If you already had this service running from before Supabase was added, you'll need to **sync the blueprint again** on Render's dashboard (Blueprint → Manual Sync, or push to the branch if auto-sync is on) so it picks up the new environment variable slots — then fill in the real values as in step 5.
 
-If you'd rather set it up manually instead of via the blueprint: create a **Web Service**, point it at this repo, set the build command to `npm ci --include=dev && npm run build`, the start command to `npm run start`, leave the port unset (Render sets `PORT` automatically and `next start` reads it), and set the three environment variables above.
+If you'd rather set it up manually instead of via the blueprint: create a **Web Service**, point it at this repo, set the build command to `npm ci --include=dev && npm run build`, the start command to `npm run start`, leave the port unset (Render sets `PORT` automatically and `next start` reads it), and set the two environment variables above.
 
 ### Other hosts
 

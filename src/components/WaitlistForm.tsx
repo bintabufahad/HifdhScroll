@@ -4,17 +4,14 @@ import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
-const DONATE_URL = process.env.NEXT_PUBLIC_DONATE_URL;
-
 export default function WaitlistForm() {
   const searchParams = useSearchParams();
-  const cameFromExpiredTrial = searchParams.get("from") === "trial";
+  const cameFromExpiredTrial = searchParams.get("from") === "trial-ended";
   const cameFromAuthError = searchParams.get("from") === "auth-error";
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [suggestion, setSuggestion] = useState("");
-  const [wantsToDonate, setWantsToDonate] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [sent, setSent] = useState(false);
@@ -32,7 +29,6 @@ export default function WaitlistForm() {
         data: {
           name: name.trim() || undefined,
           suggestion: suggestion.trim() || undefined,
-          wants_to_donate: wantsToDonate,
         },
       },
     });
@@ -52,16 +48,6 @@ export default function WaitlistForm() {
         <p className="text-[#5a4530]">
           We sent a sign-in link to <strong>{email}</strong>. Open it to activate your 14-day free trial.
         </p>
-        {DONATE_URL && (
-          <a
-            href={DONATE_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm text-[#7a4a1e] underline underline-offset-2"
-          >
-            Support HifdhScroll with a donation
-          </a>
-        )}
       </div>
     );
   }
@@ -106,15 +92,6 @@ export default function WaitlistForm() {
         rows={3}
         className="rounded-lg border border-[#c9a15d]/50 bg-[#faf3e2] px-4 py-3 text-[#3b2a1a] outline-none focus:ring-2 focus:ring-[#b8935a]"
       />
-      <label className="flex items-center gap-2 text-sm text-[#5a4530]">
-        <input
-          type="checkbox"
-          checked={wantsToDonate}
-          onChange={(e) => setWantsToDonate(e.target.checked)}
-          className="h-4 w-4"
-        />
-        I&apos;d like to support HifdhScroll with a donation
-      </label>
 
       {error && <p className="text-sm text-red-800">{error}</p>}
 

@@ -6,7 +6,7 @@ export async function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
 
   if (!user) {
-    return redirectTo(request, "/waitlist", "trial");
+    return redirectTo(request, "/waitlist", "signin");
   }
 
   const { data: profile } = await supabase
@@ -22,14 +22,14 @@ export async function proxy(request: NextRequest) {
     // The one-time feedback-for-30-days offer only makes sense once the
     // original trial has actually run out, and only once per account.
     if (trialActive) return NextResponse.redirect(new URL("/", request.url));
-    if (feedbackDone) return redirectTo(request, "/waitlist", "trial");
+    if (feedbackDone) return redirectTo(request, "/waitlist", "trial-ended");
     return supabaseResponse;
   }
 
   // /reel
   if (trialActive) return supabaseResponse;
   if (!feedbackDone) return redirectTo(request, "/feedback", "trial-ended");
-  return redirectTo(request, "/waitlist", "trial");
+  return redirectTo(request, "/waitlist", "trial-ended");
 }
 
 function redirectTo(request: NextRequest, pathname: string, from: string) {

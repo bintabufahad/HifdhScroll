@@ -9,7 +9,7 @@ import type { ReelMode } from "@/lib/types";
 export default function SetupForm() {
   const router = useRouter();
   const [mode, setMode] = useState<ReelMode>("surah");
-  const [surah, setSurah] = useState(1);
+  const [surah, setSurah] = useState(2);
   const [page, setPage] = useState(1);
   const [startSurah, setStartSurah] = useState(1);
   const [startAyah, setStartAyah] = useState(1);
