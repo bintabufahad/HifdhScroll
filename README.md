@@ -9,6 +9,16 @@ An installable web app (PWA) for scrolling through Quran "reels" — Arabic text
 3. Hit **Generate Reels**. For X ayahs in the passage, exactly 2X reels are generated, each a randomized 10-20 ayah run (never crossing a surah boundary; shorter surahs and Mushaf pages instead get a proportional window, so a short surah like Al-Fatihah still varies in start/end instead of every reel just being the whole thing — see `src/lib/reelSegments.ts`). These are random overlapping windows rather than a clean partition, so any given ayah typically turns up in several different reels with different neighbors, reciter, and scenery each time — repeated exposure in varied context for memorization — and presentation is inherently non-sequential (a reel for ayah 30 might be followed by one for ayah 112). The same logic applies to Surah, Page, and Range modes; reel count scales with passage length and never depends on how many reciters are selected.
 4. Reels play in a fullscreen, vertically-scrolling feed like Instagram Reels/TikTok — scroll or swipe down to move to the next one, no buttons. Each reel auto-plays its ayah's audio, Arabic text and translation animate in, and it auto-advances on audio end. Bismillah is detected and shown as its own banner, separate from the ayah text.
 
+## Student of Knowledge study dashboard
+
+`/study` is a separate focus-session tool for students of knowledge (not just memorization) — any signed-in user can use it regardless of trial status, since it isn't part of the reel-generation gating at all. It's linked from the home page.
+
+- **Simulated video call** (`src/components/study/FakeVideoCall.tsx`): a two-panel layout styled like a video call — a static "teacher" placeholder next to the user's own camera self-view — clearly labeled throughout as a simulation ("not a real class, no one else is on this call") so it's never mistaken for an actual call. The idea is that seeing yourself on camera, like in a real class, helps you stay on-task. Camera access is opt-in (a button, not requested automatically) and the stream is only ever rendered locally — nothing is uploaded or recorded.
+- **Lecture embed** (`src/components/study/LectureEmbed.tsx`): paste a YouTube link (e.g. a scholar's lecture) and it plays inline via `youtube-nocookie.com`, next to the video-call panel instead of a separate tab.
+- **Focus timer** (`src/components/study/StudyTimer.tsx`): 15/25/45/60-minute presets, start/pause/reset, and an "end & log now" option to record a partial session early.
+- **To-do list** (`src/components/study/TaskList.tsx`): a per-user `study_tasks` table (see `supabase/migrations/004_study_dashboard.sql`), plain Row-Level-Security scoped to `auth.uid()`.
+- **Gamification** (`src/components/study/GamificationBar.tsx`, `src/lib/gamification.ts`): points, a daily streak, and badges for point/streak milestones. Finishing (or manually ending) a timer session calls the `record_study_session` Postgres function, which awards points and updates the streak server-side — duration is capped per call and the whole calculation happens in the function, not the client, so points/streak can't just be set from devtools the way `trial_ends_at` couldn't be either (see the feedback flow above).
+
 ## Waitlist and free trial
 
 Generating reels (`/reel`) requires an active trial. New visitors are pointed to `/waitlist` (a link on the home page, or an automatic redirect if they try `/reel` directly) to sign in with just an email (name and a suggestion/feedback note are both optional) — no password. They get a magic link by email; clicking it signs them in and starts a 14-day free trial immediately.
@@ -35,7 +45,7 @@ This only ever fires once per account: the function refuses to run again if `fee
 ### Supabase setup (one-time)
 
 1. Create a free project at [supabase.com](https://supabase.com).
-2. In the SQL Editor, run `supabase/migrations/001_profiles_and_trial.sql`, then `supabase/migrations/002_feedback_and_trial_extension.sql` (adds the post-trial feedback flow and the 30-day extension function — see below), then `supabase/migrations/003_remove_donation.sql` (drops the now-unused donation column/field).
+2. In the SQL Editor, run the migrations in `supabase/migrations/` in order (001 through 004): profiles/trial, the post-trial feedback flow, the donation-field removal, then the Study Session dashboard's task table and gamification columns/function.
 3. In **Project Settings → API**, copy the **Project URL** and **anon/public key**.
 4. Confirm **Authentication → Providers → Email** has OTP/magic-link enabled (on by default).
 5. Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` to those values, locally and/or on Render (see below).

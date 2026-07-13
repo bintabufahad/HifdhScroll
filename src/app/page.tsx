@@ -18,6 +18,13 @@ export default function Home() {
           </Link>{" "}
           for a 14-day free trial.
         </p>
+        <p className="mt-2 text-sm text-[#7a5a30]">
+          Also a student of knowledge?{" "}
+          <Link href="/study" className="underline underline-offset-2 hover:text-[#7a2e2e]">
+            Open the Study Session dashboard
+          </Link>{" "}
+          — a focus timer, to-do list, and points for staying consistent.
+        </p>
       </header>
       <SetupForm />
     </div>

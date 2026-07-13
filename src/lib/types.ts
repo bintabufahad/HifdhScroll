@@ -49,3 +49,20 @@ export interface ReelSegment {
   qari: Qari;
   sceneId: string;
 }
+
+export interface StudyTask {
+  id: string;
+  title: string;
+  is_done: boolean;
+  created_at: string;
+  completed_at: string | null;
+}
+
+/** Gamification fields carried on the profiles row - see migration 004. */
+export interface ProfileStats {
+  points: number;
+  current_streak: number;
+  longest_streak: number;
+  last_study_date: string | null;
+  total_study_seconds: number;
+}

@@ -9,6 +9,13 @@ export async function proxy(request: NextRequest) {
     return redirectTo(request, "/waitlist", "signin");
   }
 
+  // Study Session dashboard is available to any signed-in user regardless
+  // of trial status - it isn't part of the reel-generation trial/feedback
+  // gate at all.
+  if (path.startsWith("/study")) {
+    return supabaseResponse;
+  }
+
   const { data: profile } = await supabase
     .from("profiles")
     .select("trial_ends_at, feedback_submitted_at")
@@ -41,5 +48,5 @@ function redirectTo(request: NextRequest, pathname: string, from: string) {
 }
 
 export const config = {
-  matcher: ["/reel/:path*", "/feedback/:path*"],
+  matcher: ["/reel/:path*", "/feedback/:path*", "/study/:path*"],
 };
