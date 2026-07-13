@@ -18,12 +18,17 @@ export default function Home() {
           </Link>{" "}
           for a 14-day free trial.
         </p>
-        <p className="mt-2 text-sm text-[#7a5a30]">
-          Also a student of knowledge?{" "}
-          <Link href="/study" className="underline underline-offset-2 hover:text-[#7a2e2e]">
-            Open the Study Session dashboard
-          </Link>{" "}
-          — a focus timer, to-do list, and points for staying consistent.
+
+        <Link
+          href="/study"
+          className="group mt-6 flex items-center justify-center gap-3 rounded-2xl border-2 border-[#c9a15d] bg-[#7a2e2e] px-6 py-4 text-lg font-semibold text-[#f5ecd7] shadow-md transition hover:bg-[#8a3a3a] hover:shadow-lg"
+        >
+          <span className="text-2xl">📖</span>
+          <span className="font-display">Student of Knowledge Dashboard</span>
+          <span className="transition group-hover:translate-x-1">→</span>
+        </Link>
+        <p className="mt-2 text-xs text-[#7a5a30]">
+          A focus study space: simulated class, lecture player, timer, to-do list, and points for staying consistent.
         </p>
       </header>
       <SetupForm />

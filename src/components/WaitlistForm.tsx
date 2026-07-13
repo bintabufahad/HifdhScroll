@@ -8,6 +8,7 @@ export default function WaitlistForm() {
   const searchParams = useSearchParams();
   const cameFromExpiredTrial = searchParams.get("from") === "trial-ended";
   const cameFromAuthError = searchParams.get("from") === "auth-error";
+  const nextParam = searchParams.get("next");
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -22,10 +23,16 @@ export default function WaitlistForm() {
     setError("");
 
     const supabase = createClient();
+    const safeNext = nextParam && nextParam.startsWith("/") && !nextParam.startsWith("//") ? nextParam : "/";
+    const redirectUrl = new URL(`${window.location.origin}/auth/callback`);
+    if (safeNext !== "/") {
+      redirectUrl.searchParams.set("next", safeNext);
+    }
+
     const { error: signInError } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        emailRedirectTo: redirectUrl.toString(),
         data: {
           name: name.trim() || undefined,
           suggestion: suggestion.trim() || undefined,

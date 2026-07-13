@@ -6,7 +6,8 @@ export async function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
 
   if (!user) {
-    return redirectTo(request, "/waitlist", "signin");
+    // Remember where they were headed so sign-in returns them there.
+    return redirectTo(request, "/waitlist", "signin", path + request.nextUrl.search);
   }
 
   // Study Session dashboard is available to any signed-in user regardless
@@ -39,11 +40,14 @@ export async function proxy(request: NextRequest) {
   return redirectTo(request, "/waitlist", "trial-ended");
 }
 
-function redirectTo(request: NextRequest, pathname: string, from: string) {
+function redirectTo(request: NextRequest, pathname: string, from: string, next?: string) {
   const url = request.nextUrl.clone();
   url.pathname = pathname;
   url.search = "";
   url.searchParams.set("from", from);
+  if (next && next.startsWith("/")) {
+    url.searchParams.set("next", next);
+  }
   return NextResponse.redirect(url);
 }
 

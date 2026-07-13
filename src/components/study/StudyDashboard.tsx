@@ -4,10 +4,10 @@ import { useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import FakeVideoCall from "./FakeVideoCall";
-import LectureEmbed from "./LectureEmbed";
 import StudyTimer from "./StudyTimer";
 import TaskList from "./TaskList";
 import GamificationBar from "./GamificationBar";
+import MusicPlayer from "./MusicPlayer";
 import type { ProfileStats, StudyTask } from "@/lib/types";
 
 export default function StudyDashboard({
@@ -34,6 +34,7 @@ export default function StudyDashboard({
 
   return (
     <div className="paper-texture flex flex-1 flex-col bg-gradient-to-b from-[#efe4c8] via-[#e8dcc0] to-[#ddcda3] px-6 py-10">
+      <MusicPlayer />
       <header className="mx-auto mb-8 w-full max-w-4xl text-center">
         <h1 className="font-display text-4xl font-bold text-[#3b2a1a]">Student of Knowledge</h1>
         <div className="mx-auto mt-3 h-px w-24 bg-[#c9a15d]" />
@@ -59,13 +60,9 @@ export default function StudyDashboard({
         <FakeVideoCall />
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          <LectureEmbed />
-          <div className="flex flex-col gap-6">
-            <StudyTimer onSessionComplete={handleSessionComplete} />
-          </div>
+          <StudyTimer onSessionComplete={handleSessionComplete} />
+          <TaskList tasks={tasks} onTasksChange={setTasks} />
         </div>
-
-        <TaskList tasks={tasks} onTasksChange={setTasks} />
       </div>
     </div>
   );
