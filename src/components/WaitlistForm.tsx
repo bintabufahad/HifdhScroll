@@ -10,13 +10,19 @@ function isNetworkError(message: string): boolean {
 }
 
 function friendlyError(message: string): string {
-  if (isNetworkError(message)) {
+  const m = (message || "").trim();
+  if (isNetworkError(m)) {
     return "Couldn't reach the server. Check your internet connection and try again. If it keeps failing, the app's database may be waking up — wait a minute and retry.";
   }
-  if (message.toLowerCase().includes("rate limit")) {
+  if (m.toLowerCase().includes("rate limit")) {
     return "Too many attempts for now. Please wait a little while, then request the link again.";
   }
-  return message || "Something went wrong. Please try again.";
+  // Opaque/empty server errors (e.g. "{}", "[object Object]", or a database
+  // error during signup) - give something actionable instead of the raw blob.
+  if (m === "" || m === "{}" || m === "[object Object]" || m.toLowerCase().includes("database error")) {
+    return "The server couldn't complete sign-in right now — this is usually a temporary issue on the app's side. Please wait a minute and try again.";
+  }
+  return m;
 }
 
 export default function WaitlistForm() {
@@ -65,6 +71,8 @@ export default function WaitlistForm() {
           setSent(true);
           return;
         }
+        // Log the full error so the real cause is visible in the browser console.
+        console.error("Sign-in error:", signInError);
         if (isNetworkError(signInError.message) && attempt === 0) {
           await new Promise((r) => setTimeout(r, 1200));
           continue;
@@ -73,6 +81,7 @@ export default function WaitlistForm() {
         setSubmitting(false);
         return;
       } catch (err) {
+        console.error("Sign-in threw:", err);
         const message = err instanceof Error ? err.message : String(err);
         if (isNetworkError(message) && attempt === 0) {
           await new Promise((r) => setTimeout(r, 1200));
