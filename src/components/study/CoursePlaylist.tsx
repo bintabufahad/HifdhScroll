@@ -1,29 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 import { extractYouTubeId } from "@/lib/youtube";
-
-type ItemType = "youtube" | "pdf";
-
-interface CourseItem {
-  id: string;
-  type: ItemType;
-  url: string;
-  title: string;
-  done: boolean;
-}
-
-const STORAGE_KEY = "hifdhscroll.study.course";
-
-function loadCourse(): CourseItem[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as CourseItem[]) : [];
-  } catch {
-    return [];
-  }
-}
+import type { CourseItem, CourseItemType } from "@/lib/types";
 
 function thumb(id: string): string {
   return `https://img.youtube.com/vi/${id}/mqdefault.jpg`;
@@ -31,41 +11,35 @@ function thumb(id: string): string {
 
 /**
  * A structured, ordered course the student builds for themselves: a queue of
- * YouTube lectures and PDF readings. YouTube links show their cover thumbnail
- * so it's clear which video is which. Clicking a lecture plays it in the teacher
- * panel; clicking a PDF opens it. Items can be checked off, and the header shows
- * course progress. Stored in localStorage so it needs no backend.
+ * YouTube lectures and PDF readings, stored per-user in Supabase (see migration
+ * 005) so it's durable and cross-device - not just browser cache. YouTube links
+ * show their cover thumbnail. Clicking a lecture plays it in the teacher panel;
+ * a PDF opens in a new tab.
  */
 export default function CoursePlaylist({
   open,
   onToggle,
   onPlayLecture,
+  initialItems,
 }: {
   open: boolean;
   onToggle: () => void;
   onPlayLecture: (id: string) => void;
+  initialItems: CourseItem[];
 }) {
-  const [items, setItems] = useState<CourseItem[]>(loadCourse);
-  const [type, setType] = useState<ItemType>("youtube");
+  const [items, setItems] = useState<CourseItem[]>(initialItems);
+  const [type, setType] = useState<CourseItemType>("youtube");
   const [url, setUrl] = useState("");
   const [title, setTitle] = useState("");
   const [error, setError] = useState("");
-
-  useEffect(() => {
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-    } catch {
-      // ignore storage write failures
-    }
-  }, [items]);
+  const [busy, setBusy] = useState(false);
 
   const previewId = type === "youtube" ? extractYouTubeId(url) : null;
 
-  function addItem(e: React.FormEvent) {
+  async function addItem(e: React.FormEvent) {
     e.preventDefault();
     const trimmed = url.trim();
     if (!trimmed) return;
-
     if (type === "youtube" && !extractYouTubeId(trimmed)) {
       setError("That doesn't look like a YouTube link.");
       return;
@@ -80,54 +54,83 @@ export default function CoursePlaylist({
     }
 
     setError("");
-    setItems((prev) => [
-      ...prev,
-      {
-        id: crypto.randomUUID(),
+    setBusy(true);
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      setBusy(false);
+      return;
+    }
+    const position = items.length > 0 ? Math.max(...items.map((i) => i.position)) + 1 : 0;
+    const { data, error: insErr } = await supabase
+      .from("course_items")
+      .insert({
+        user_id: user.id,
         type,
         url: trimmed,
         title: title.trim() || (type === "youtube" ? "Lecture" : "Reading (PDF)"),
-        done: false,
-      },
-    ]);
-    setUrl("");
-    setTitle("");
+        position,
+      })
+      .select("id, type, url, title, done, position")
+      .single();
+
+    setBusy(false);
+    if (!insErr && data) {
+      setItems((prev) => [...prev, data as CourseItem]);
+      setUrl("");
+      setTitle("");
+    } else {
+      setError("Couldn't save this. Please try again.");
+    }
   }
 
   function openItem(item: CourseItem) {
     if (item.type === "youtube") {
       const id = extractYouTubeId(item.url);
-      if (id) {
-        onPlayLecture(id);
-      }
+      if (id) onPlayLecture(id);
     } else {
       window.open(item.url, "_blank", "noopener,noreferrer");
     }
   }
 
-  function toggleDone(id: string) {
-    setItems((prev) => prev.map((i) => (i.id === id ? { ...i, done: !i.done } : i)));
+  async function toggleDone(item: CourseItem) {
+    const next = !item.done;
+    setItems((prev) => prev.map((i) => (i.id === item.id ? { ...i, done: next } : i)));
+    const supabase = createClient();
+    await supabase.from("course_items").update({ done: next }).eq("id", item.id);
   }
 
-  function remove(id: string) {
+  async function remove(id: string) {
     setItems((prev) => prev.filter((i) => i.id !== id));
+    const supabase = createClient();
+    await supabase.from("course_items").delete().eq("id", id);
   }
 
-  function move(index: number, dir: -1 | 1) {
-    setItems((prev) => {
-      const next = [...prev];
-      const target = index + dir;
-      if (target < 0 || target >= next.length) return prev;
-      [next[index], next[target]] = [next[target], next[index]];
-      return next;
-    });
+  async function move(index: number, dir: -1 | 1) {
+    const target = index + dir;
+    if (target < 0 || target >= items.length) return;
+    const a = items[index];
+    const b = items[target];
+    // Swap positions locally and persist both.
+    const reordered = [...items];
+    reordered[index] = { ...b, position: a.position };
+    reordered[target] = { ...a, position: b.position };
+    reordered.sort((x, y) => x.position - y.position);
+    setItems(reordered);
+    const supabase = createClient();
+    await Promise.all([
+      supabase.from("course_items").update({ position: b.position }).eq("id", a.id),
+      supabase.from("course_items").update({ position: a.position }).eq("id", b.id),
+    ]);
   }
 
   const doneCount = items.filter((i) => i.done).length;
   const progress = items.length > 0 ? Math.round((doneCount / items.length) * 100) : 0;
 
   return (
-    <div className="fixed right-[4.75rem] top-4 z-50">
+    <div className="fixed right-4 top-4 z-50">
       <button
         type="button"
         onClick={onToggle}
@@ -162,7 +165,7 @@ export default function CoursePlaylist({
 
           <form onSubmit={addItem} className="mb-3 flex flex-col gap-2">
             <div className="flex gap-1">
-              {(["youtube", "pdf"] as ItemType[]).map((t) => (
+              {(["youtube", "pdf"] as CourseItemType[]).map((t) => (
                 <button
                   key={t}
                   type="button"
@@ -194,12 +197,12 @@ export default function CoursePlaylist({
               />
               <button
                 type="submit"
-                className="rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-medium text-emerald-950 hover:bg-emerald-400"
+                disabled={busy}
+                className="rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-medium text-emerald-950 hover:bg-emerald-400 disabled:opacity-60"
               >
                 Add
               </button>
             </div>
-            {/* Cover preview so you can see which video you're adding. */}
             {previewId && (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -229,7 +232,7 @@ export default function CoursePlaylist({
                     <input
                       type="checkbox"
                       checked={item.done}
-                      onChange={() => toggleDone(item.id)}
+                      onChange={() => toggleDone(item)}
                       className="h-3.5 w-3.5 shrink-0 accent-emerald-500"
                       aria-label="Mark done"
                     />

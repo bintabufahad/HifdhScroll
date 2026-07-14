@@ -57,3 +57,14 @@ export interface StudyTask {
   created_at: string;
   completed_at: string | null;
 }
+
+export type CourseItemType = "youtube" | "pdf";
+
+export interface CourseItem {
+  id: string;
+  type: CourseItemType;
+  url: string;
+  title: string;
+  done: boolean;
+  position: number;
+}

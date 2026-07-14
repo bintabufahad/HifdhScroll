@@ -7,17 +7,22 @@ import CameraView from "./CameraView";
 import TeacherBox from "./TeacherBox";
 import StudyTimer from "./StudyTimer";
 import TaskList from "./TaskList";
-import MusicPlayer from "./MusicPlayer";
 import CoursePlaylist from "./CoursePlaylist";
 import UstadWatcher from "./UstadWatcher";
 import { useCamera } from "./useCamera";
-import type { StudyTask } from "@/lib/types";
+import type { CourseItem, StudyTask } from "@/lib/types";
 
-export default function StudyDashboard({ initialTasks }: { initialTasks: StudyTask[] }) {
+export default function StudyDashboard({
+  initialTasks,
+  initialCourse,
+}: {
+  initialTasks: StudyTask[];
+  initialCourse: CourseItem[];
+}) {
   const [tasks, setTasks] = useState(initialTasks);
   const [toast, setToast] = useState("");
   const [lectureId, setLectureId] = useState<string | null>(null);
-  const [openPanel, setOpenPanel] = useState<"music" | "course" | null>(null);
+  const [courseOpen, setCourseOpen] = useState(false);
   const camera = useCamera();
 
   // The big slot shows the lecture if there is one, else the camera (when on),
@@ -34,19 +39,16 @@ export default function StudyDashboard({ initialTasks }: { initialTasks: StudyTa
 
   return (
     <div className="bg-app-dark relative flex flex-1 flex-col px-3 py-4 sm:px-5">
-      <MusicPlayer
-        open={openPanel === "music"}
-        onToggle={() => setOpenPanel((p) => (p === "music" ? null : "music"))}
-      />
       <CoursePlaylist
-        open={openPanel === "course"}
-        onToggle={() => setOpenPanel((p) => (p === "course" ? null : "course"))}
+        open={courseOpen}
+        onToggle={() => setCourseOpen((v) => !v)}
         onPlayLecture={(id) => {
           setLectureId(id);
-          setOpenPanel(null);
+          setCourseOpen(false);
         }}
+        initialItems={initialCourse}
       />
-      <UstadWatcher />
+      <UstadWatcher enabled={lectureId === null} />
 
       {toast && (
         <div className="animate-rise-in fixed left-1/2 top-4 z-50 -translate-x-1/2">
