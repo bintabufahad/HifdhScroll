@@ -41,7 +41,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   viewportFit: "cover",
-  themeColor: "#3b2a1a",
+  themeColor: "#0a1210",
 };
 
 export default function RootLayout({
@@ -54,7 +54,7 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} ${amiri.variable} ${playfair.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-[#e8dcc0]">
+      <body className="min-h-full flex flex-col bg-[#080d0c]">
         {children}
         <ServiceWorkerRegistration />
       </body>

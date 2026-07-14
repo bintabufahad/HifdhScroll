@@ -108,10 +108,53 @@ body {
   box-shadow: 0 8px 20px -8px rgba(59, 42, 26, 0.35);
 }
 
+/* ---- Modern dark theme (hub + study dashboard) ---- */
+
+.bg-app-dark {
+  background:
+    radial-gradient(1100px 560px at 18% -10%, rgba(16, 185, 129, 0.14), transparent 60%),
+    radial-gradient(900px 520px at 92% 4%, rgba(227, 179, 65, 0.08), transparent 60%),
+    linear-gradient(180deg, #070b0d 0%, #0a1210 55%, #080d0c 100%);
+  background-attachment: fixed;
+  color: #e8f0ee;
+}
+
+.glass {
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.glass-strong {
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.emerald-glow {
+  box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.35), 0 8px 30px -8px rgba(16, 185, 129, 0.35);
+}
+
+@keyframes floatSoft {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+.float-soft {
+  animation: floatSoft 5s ease-in-out infinite;
+}
+
+/* The faceless "Ustad" peeking in from the edge to keep you accountable. */
+.ustad-peek {
+  transition: transform 0.9s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.9s ease;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-rise-in,
   .points-pop,
-  .badge-glow {
+  .badge-glow,
+  .float-soft {
     animation: none;
   }
   .lift:hover {

@@ -25,12 +25,16 @@ function loadCourse(): CourseItem[] {
   }
 }
 
+function thumb(id: string): string {
+  return `https://img.youtube.com/vi/${id}/mqdefault.jpg`;
+}
+
 /**
  * A structured, ordered course the student builds for themselves: a queue of
- * YouTube lectures and PDF readings. Clicking a lecture plays it in the teacher
+ * YouTube lectures and PDF readings. YouTube links show their cover thumbnail
+ * so it's clear which video is which. Clicking a lecture plays it in the teacher
  * panel; clicking a PDF opens it. Items can be checked off, and the header shows
- * course progress - a light bit of gamification to encourage finishing. Stored
- * in localStorage so it needs no backend and persists across visits.
+ * course progress. Stored in localStorage so it needs no backend.
  */
 export default function CoursePlaylist({ onPlayLecture }: { onPlayLecture: (id: string) => void }) {
   const [open, setOpen] = useState(false);
@@ -47,6 +51,8 @@ export default function CoursePlaylist({ onPlayLecture }: { onPlayLecture: (id: 
       // ignore storage write failures
     }
   }, [items]);
+
+  const previewId = type === "youtube" ? extractYouTubeId(url) : null;
 
   function addItem(e: React.FormEvent) {
     e.preventDefault();
@@ -120,25 +126,25 @@ export default function CoursePlaylist({ onPlayLecture }: { onPlayLecture: (id: 
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-label="Course playlist"
-        className="lift flex h-11 items-center gap-1 rounded-full border border-[#c9a15d] bg-[#faf3e2] px-3 text-[#7a2e2e] shadow-md hover:bg-[#f5ecd7]"
+        className="lift glass-strong flex h-11 items-center gap-1 rounded-full px-3 text-emerald-200 shadow-md hover:text-white"
       >
         <span className="text-lg">☰</span>
         <span className="hidden text-xs font-medium sm:inline">Course</span>
       </button>
 
       {open && (
-        <div className="animate-rise-in mt-2 w-80 rounded-xl border border-[#c9a15d]/50 bg-[#faf3e2] p-3 shadow-lg">
+        <div className="glass-strong animate-rise-in mt-2 w-80 rounded-xl p-3 shadow-xl">
           <div className="mb-2 flex items-center justify-between">
-            <p className="text-xs font-medium uppercase tracking-widest text-[#7a5a30]">Structured course</p>
-            <span className="text-xs text-[#7a5a30]">
+            <p className="text-xs font-medium uppercase tracking-widest text-emerald-200/70">Structured course</p>
+            <span className="text-xs text-white/50">
               {doneCount}/{items.length}
             </span>
           </div>
 
           {items.length > 0 && (
-            <div className="mb-3 h-2 w-full overflow-hidden rounded-full bg-[#e8dcc0]">
+            <div className="mb-3 h-2 w-full overflow-hidden rounded-full bg-white/10">
               <div
-                className="h-full rounded-full bg-[#7a2e2e] transition-all duration-500"
+                className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-emerald-500 transition-all duration-500"
                 style={{ width: `${progress}%` }}
               />
             </div>
@@ -153,8 +159,8 @@ export default function CoursePlaylist({ onPlayLecture }: { onPlayLecture: (id: 
                   onClick={() => setType(t)}
                   className={`flex-1 rounded-lg px-2 py-1 text-xs font-medium transition ${
                     type === t
-                      ? "bg-[#7a2e2e] text-[#f5ecd7]"
-                      : "border border-[#c9a15d]/40 bg-white/50 text-[#5a4530] hover:bg-white/80"
+                      ? "bg-emerald-500 text-emerald-950"
+                      : "border border-white/15 bg-white/5 text-white/70 hover:bg-white/10"
                   }`}
                 >
                   {t === "youtube" ? "▶ Lecture" : "📄 PDF"}
@@ -166,7 +172,7 @@ export default function CoursePlaylist({ onPlayLecture }: { onPlayLecture: (id: 
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Title (optional)"
-              className="rounded-lg border border-[#c9a15d]/50 bg-white/70 px-2 py-1.5 text-xs text-[#3b2a1a] outline-none focus:ring-2 focus:ring-[#b8935a]"
+              className="rounded-lg border border-white/15 bg-white/5 px-2 py-1.5 text-xs text-white outline-none placeholder:text-white/40 focus:ring-2 focus:ring-emerald-500/50"
             />
             <div className="flex gap-2">
               <input
@@ -174,67 +180,86 @@ export default function CoursePlaylist({ onPlayLecture }: { onPlayLecture: (id: 
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 placeholder={type === "youtube" ? "YouTube link…" : "PDF link…"}
-                className="flex-1 rounded-lg border border-[#c9a15d]/50 bg-white/70 px-2 py-1.5 text-xs text-[#3b2a1a] outline-none focus:ring-2 focus:ring-[#b8935a]"
+                className="flex-1 rounded-lg border border-white/15 bg-white/5 px-2 py-1.5 text-xs text-white outline-none placeholder:text-white/40 focus:ring-2 focus:ring-emerald-500/50"
               />
               <button
                 type="submit"
-                className="rounded-lg bg-[#7a2e2e] px-3 py-1.5 text-xs font-medium text-[#f5ecd7] hover:bg-[#8a3a3a]"
+                className="rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-medium text-emerald-950 hover:bg-emerald-400"
               >
                 Add
               </button>
             </div>
-            {error && <p className="text-xs text-red-800">{error}</p>}
+            {/* Cover preview so you can see which video you're adding. */}
+            {previewId && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={thumb(previewId)}
+                alt="Video preview"
+                className="h-24 w-full rounded-lg border border-white/10 object-cover"
+              />
+            )}
+            {error && <p className="text-xs text-red-300">{error}</p>}
           </form>
 
           {items.length === 0 ? (
-            <p className="text-center text-xs text-[#7a5a30]">
+            <p className="text-center text-xs text-white/45">
               Build your course: add lectures and PDF readings in the order you want to study them.
             </p>
           ) : (
-            <ul className="flex max-h-72 flex-col gap-1 overflow-y-auto">
-              {items.map((item, i) => (
-                <li
-                  key={item.id}
-                  className={`flex items-center gap-1.5 rounded-lg border px-2 py-1.5 ${
-                    item.done ? "border-[#c9a15d]/30 bg-[#c9a15d]/10" : "border-[#c9a15d]/30 bg-white/40"
-                  }`}
-                >
-                  <input
-                    type="checkbox"
-                    checked={item.done}
-                    onChange={() => toggleDone(item.id)}
-                    className="h-3.5 w-3.5 shrink-0"
-                    aria-label="Mark done"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => openItem(item)}
-                    className={`flex-1 truncate text-left text-xs ${
-                      item.done ? "text-[#7a5a30] line-through" : "text-[#3b2a1a]"
+            <ul className="flex max-h-80 flex-col gap-1.5 overflow-y-auto">
+              {items.map((item, i) => {
+                const ytId = item.type === "youtube" ? extractYouTubeId(item.url) : null;
+                return (
+                  <li
+                    key={item.id}
+                    className={`flex items-center gap-2 rounded-lg border px-2 py-1.5 ${
+                      item.done ? "border-emerald-400/30 bg-emerald-500/10" : "border-white/10 bg-white/5"
                     }`}
-                    title={item.url}
                   >
-                    {item.type === "youtube" ? "▶ " : "📄 "}
-                    {item.title}
-                  </button>
-                  <div className="flex shrink-0 items-center gap-0.5 text-[#7a5a30]">
-                    <button type="button" onClick={() => move(i, -1)} aria-label="Move up" className="hover:text-[#3b2a1a]">
-                      ↑
-                    </button>
-                    <button type="button" onClick={() => move(i, 1)} aria-label="Move down" className="hover:text-[#3b2a1a]">
-                      ↓
-                    </button>
+                    <input
+                      type="checkbox"
+                      checked={item.done}
+                      onChange={() => toggleDone(item.id)}
+                      className="h-3.5 w-3.5 shrink-0 accent-emerald-500"
+                      aria-label="Mark done"
+                    />
                     <button
                       type="button"
-                      onClick={() => remove(item.id)}
-                      aria-label="Remove"
-                      className="text-red-800/70 hover:text-red-800"
+                      onClick={() => openItem(item)}
+                      className="flex min-w-0 flex-1 items-center gap-2 text-left"
+                      title={item.url}
                     >
-                      ✕
+                      {ytId ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={thumb(ytId)} alt="" className="h-8 w-12 shrink-0 rounded object-cover" />
+                      ) : (
+                        <span className="flex h-8 w-12 shrink-0 items-center justify-center rounded bg-white/10 text-sm">
+                          📄
+                        </span>
+                      )}
+                      <span className={`truncate text-xs ${item.done ? "text-white/40 line-through" : "text-white/85"}`}>
+                        {item.title}
+                      </span>
                     </button>
-                  </div>
-                </li>
-              ))}
+                    <div className="flex shrink-0 items-center gap-0.5 text-white/50">
+                      <button type="button" onClick={() => move(i, -1)} aria-label="Move up" className="hover:text-white">
+                        ↑
+                      </button>
+                      <button type="button" onClick={() => move(i, 1)} aria-label="Move down" className="hover:text-white">
+                        ↓
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => remove(item.id)}
+                        aria-label="Remove"
+                        className="text-red-300/70 hover:text-red-300"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </div>

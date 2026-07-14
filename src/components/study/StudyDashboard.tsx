@@ -10,6 +10,7 @@ import TaskList from "./TaskList";
 import GamificationBar from "./GamificationBar";
 import MusicPlayer from "./MusicPlayer";
 import CoursePlaylist from "./CoursePlaylist";
+import UstadWatcher from "./UstadWatcher";
 import type { ProfileStats, StudyTask } from "@/lib/types";
 
 export default function StudyDashboard({
@@ -24,8 +25,6 @@ export default function StudyDashboard({
   const [toast, setToast] = useState("");
   const [pointsGained, setPointsGained] = useState<number | null>(null);
   const [lectureId, setLectureId] = useState<string | null>(null);
-
-  const lectureActive = lectureId !== null;
 
   async function handleSessionComplete(seconds: number) {
     const supabase = createClient();
@@ -46,39 +45,37 @@ export default function StudyDashboard({
   }
 
   return (
-    <div className="paper-texture relative flex flex-1 flex-col bg-gradient-to-b from-[#efe4c8] via-[#e8dcc0] to-[#ddcda3] px-4 py-10 sm:px-6">
+    <div className="bg-app-dark relative flex flex-1 flex-col px-4 py-6 sm:px-6">
       <MusicPlayer />
       <CoursePlaylist onPlayLecture={setLectureId} />
+      <UstadWatcher />
 
-      {/* Floating "+points" animation when a session is logged. */}
       {pointsGained !== null && (
         <div className="pointer-events-none fixed left-1/2 top-24 z-50 -translate-x-1/2">
-          <span className="points-pop inline-block rounded-full bg-[#7a2e2e] px-4 py-1 font-display text-lg font-bold text-[#f5ecd7] shadow-lg">
+          <span className="points-pop inline-block rounded-full bg-emerald-500 px-4 py-1 font-display text-lg font-bold text-emerald-950 shadow-lg">
             +{pointsGained} pts
           </span>
         </div>
       )}
 
-      <header className="animate-rise-in mx-auto mb-8 w-full max-w-5xl text-center">
-        <h1 className="font-display text-4xl font-bold text-[#3b2a1a]">Student of Knowledge</h1>
-        <div className="mx-auto mt-3 h-px w-24 bg-[#c9a15d]" />
-        <p className="mt-4 text-[#5a4530]">
-          A focused study space: a simulated class, your lecture or course, a timer, and your to-do list — all in one
-          place.
-        </p>
-        <p className="mt-2 text-sm text-[#7a5a30]">
-          <Link href="/" className="underline underline-offset-2 hover:text-[#7a2e2e]">
+      <header className="animate-rise-in mx-auto mb-5 w-full max-w-6xl text-center">
+        <div className="flex items-center justify-between">
+          <Link
+            href="/"
+            className="rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs text-white/70 hover:bg-white/10"
+          >
             ← Home
           </Link>
-        </p>
+          <h1 className="font-display text-2xl font-bold text-white sm:text-3xl">
+            Student of <span className="text-emerald-300">Knowledge</span>
+          </h1>
+          <span className="w-14" />
+        </div>
       </header>
 
-      <div
-        className="mx-auto flex w-full flex-col gap-6"
-        style={{ maxWidth: lectureActive ? "72rem" : "56rem" }}
-      >
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-5">
         {toast && (
-          <p className="animate-rise-in rounded-lg border border-[#c9a15d]/40 bg-[#f5ecd7] px-4 py-2 text-center text-sm text-[#5a4530]">
+          <p className="animate-rise-in rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-2 text-center text-sm text-emerald-100">
             {toast}
           </p>
         )}
@@ -87,46 +84,24 @@ export default function StudyDashboard({
           <GamificationBar stats={stats} />
         </div>
 
-        {lectureActive ? (
-          // Lecture playing: the class fills the space, camera sits directly
-          // beneath it, and the timer + to-do list go below the camera.
-          <>
+        {/* Lecture on the left; camera + timer + to-do stacked on the right so
+            they stay in view without scrolling. Stacks on smaller screens. */}
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)]">
+          <div className="animate-rise-in">
+            <LecturePanel lectureId={lectureId} onSetLecture={setLectureId} onClear={() => setLectureId(null)} />
+          </div>
+          <div className="flex flex-col gap-5">
             <div className="animate-rise-in">
-              <LecturePanel lectureId={lectureId} onSetLecture={setLectureId} onClear={() => setLectureId(null)} />
-            </div>
-            <div className="animate-rise-in mx-auto w-full max-w-sm">
               <CameraSelfView />
             </div>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              <div className="animate-rise-in">
-                <StudyTimer onSessionComplete={handleSessionComplete} />
-              </div>
-              <div className="animate-rise-in">
-                <TaskList tasks={tasks} onTasksChange={setTasks} />
-              </div>
+            <div className="animate-rise-in">
+              <StudyTimer onSessionComplete={handleSessionComplete} />
             </div>
-          </>
-        ) : (
-          // No lecture yet: a compact class + camera row, then timer + to-do.
-          <>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              <div className="animate-rise-in">
-                <LecturePanel lectureId={lectureId} onSetLecture={setLectureId} onClear={() => setLectureId(null)} />
-              </div>
-              <div className="animate-rise-in">
-                <CameraSelfView />
-              </div>
+            <div className="animate-rise-in">
+              <TaskList tasks={tasks} onTasksChange={setTasks} />
             </div>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              <div className="animate-rise-in">
-                <StudyTimer onSessionComplete={handleSessionComplete} />
-              </div>
-              <div className="animate-rise-in">
-                <TaskList tasks={tasks} onTasksChange={setTasks} />
-              </div>
-            </div>
-          </>
-        )}
+          </div>
+        </div>
       </div>
     </div>
   );

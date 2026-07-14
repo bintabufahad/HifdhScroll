@@ -68,10 +68,10 @@ export default function TaskList({
   const doneCount = tasks.filter((t) => t.is_done).length;
 
   return (
-    <div className="rounded-2xl border border-[#c9a15d]/40 bg-[#faf3e2] p-4">
+    <div className="glass rounded-2xl p-4">
       <div className="mb-2 flex items-center justify-between">
-        <p className="text-xs font-medium uppercase tracking-widest text-[#7a5a30]">Study to-do list</p>
-        <span className="text-xs text-[#7a5a30]">
+        <p className="text-xs font-medium uppercase tracking-widest text-emerald-200/70">Study to-do list</p>
+        <span className="text-xs text-white/50">
           {doneCount}/{tasks.length} done
         </span>
       </div>
@@ -82,40 +82,40 @@ export default function TaskList({
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="e.g. Memorize Ayat al-Kursi"
-          className="flex-1 rounded-lg border border-[#c9a15d]/50 bg-white/60 px-3 py-2 text-sm text-[#3b2a1a] outline-none focus:ring-2 focus:ring-[#b8935a]"
+          className="flex-1 rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-white outline-none placeholder:text-white/40 focus:ring-2 focus:ring-emerald-500/50"
         />
         <button
           type="submit"
           disabled={submitting}
-          className="rounded-lg bg-[#7a2e2e] px-4 py-2 text-sm font-medium text-[#f5ecd7] hover:bg-[#8a3a3a] disabled:opacity-60"
+          className="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-emerald-950 hover:bg-emerald-400 disabled:opacity-50"
         >
           Add
         </button>
       </form>
 
       {tasks.length === 0 ? (
-        <p className="text-center text-sm text-[#7a5a30]">No tasks yet — add your first one above.</p>
+        <p className="text-center text-sm text-white/45">No tasks yet — add your first one above.</p>
       ) : (
         <ul className="flex flex-col gap-2">
           {tasks.map((task) => (
             <li
               key={task.id}
-              className="flex items-center gap-2 rounded-lg border border-[#c9a15d]/30 bg-white/40 px-3 py-2"
+              className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2"
             >
               <input
                 type="checkbox"
                 checked={task.is_done}
                 onChange={() => toggleTask(task)}
-                className="h-4 w-4"
+                className="h-4 w-4 accent-emerald-500"
               />
-              <span className={`flex-1 text-sm ${task.is_done ? "text-[#7a5a30] line-through" : "text-[#3b2a1a]"}`}>
+              <span className={`flex-1 text-sm ${task.is_done ? "text-white/40 line-through" : "text-white/90"}`}>
                 {task.title}
               </span>
               <button
                 type="button"
                 onClick={() => deleteTask(task.id)}
                 aria-label="Delete task"
-                className="text-xs text-red-800/70 hover:text-red-800"
+                className="text-xs text-red-300/70 hover:text-red-300"
               >
                 Remove
               </button>
