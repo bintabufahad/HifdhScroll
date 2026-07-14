@@ -14,10 +14,13 @@ export default function LecturePanel({
   lectureId,
   onSetLecture,
   onClear,
+  fill = false,
 }: {
   lectureId: string | null;
   onSetLecture: (id: string) => void;
   onClear: () => void;
+  /** When true, the video grows to fill the column's height on desktop (big). */
+  fill?: boolean;
 }) {
   const [showInput, setShowInput] = useState(false);
   const [input, setInput] = useState("");
@@ -37,12 +40,16 @@ export default function LecturePanel({
   }
 
   return (
-    <div className="glass rounded-2xl p-4">
-      <p className="mb-3 text-center text-xs font-medium uppercase tracking-widest text-emerald-200/70">
+    <div className={`glass flex flex-col rounded-2xl p-4 ${fill ? "h-full" : ""}`}>
+      <p className="mb-3 shrink-0 text-center text-xs font-medium uppercase tracking-widest text-emerald-200/70">
         Simulated study call — not a real class, no one else is on this call
       </p>
 
-      <div className="relative flex aspect-video w-full flex-col items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-black/50">
+      <div
+        className={`relative flex w-full flex-col items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-black/50 ${
+          fill ? "aspect-video lg:aspect-auto lg:min-h-0 lg:flex-1" : "aspect-video"
+        }`}
+      >
         {lectureId ? (
           <iframe
             key={lectureId}

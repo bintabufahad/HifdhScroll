@@ -43,21 +43,26 @@ export default function SetupForm() {
     router.push(`/reel?${params.toString()}`);
   }
 
+  const selectClass =
+    "w-full rounded-lg border border-white/15 bg-white/5 px-4 py-3 text-white outline-none focus:ring-2 focus:ring-emerald-500/50 [&>option]:bg-[#0d1512] [&>option]:text-white";
+  const inputClass =
+    "w-full rounded-lg border border-white/15 bg-white/5 px-4 py-3 text-white outline-none placeholder:text-white/40 focus:ring-2 focus:ring-emerald-500/50";
+
   return (
-    <div className="w-full max-w-xl mx-auto flex flex-col gap-8">
-      <section>
-        <h2 className="font-display text-sm font-semibold uppercase tracking-widest text-[#7a4a1e] mb-3">
+    <div className="mx-auto flex w-full max-w-xl flex-col gap-8">
+      <section className="glass rounded-2xl p-5">
+        <h2 className="mb-3 font-display text-sm font-semibold uppercase tracking-widest text-emerald-200/80">
           Select passage
         </h2>
-        <div className="flex gap-2 mb-4">
+        <div className="mb-4 flex gap-2">
           {(["surah", "page", "range"] as ReelMode[]).map((m) => (
             <button
               key={m}
               onClick={() => setMode(m)}
-              className={`px-4 py-2 rounded-full text-sm font-medium capitalize transition border ${
+              className={`rounded-full border px-4 py-2 text-sm font-medium capitalize transition ${
                 mode === m
-                  ? "bg-[#7a2e2e] text-[#f5ecd7] border-[#7a2e2e]"
-                  : "bg-[#f5ecd7]/60 text-[#5a4530] border-[#c9a15d]/40 hover:bg-[#f5ecd7]"
+                  ? "border-emerald-400 bg-emerald-500 text-emerald-950"
+                  : "border-white/15 bg-white/5 text-white/70 hover:bg-white/10"
               }`}
             >
               {m}
@@ -66,11 +71,7 @@ export default function SetupForm() {
         </div>
 
         {mode === "surah" && (
-          <select
-            value={surah}
-            onChange={(e) => setSurah(Number(e.target.value))}
-            className="w-full rounded-lg border border-[#c9a15d]/50 bg-[#faf3e2] px-4 py-3 text-[#3b2a1a] outline-none focus:ring-2 focus:ring-[#b8935a]"
-          >
+          <select value={surah} onChange={(e) => setSurah(Number(e.target.value))} className={selectClass}>
             {surahs.map((s) => (
               <option key={s.number} value={s.number}>
                 {s.number}. {s.name} · {s.nameArabic} ({s.ayahCount} ayahs)
@@ -86,7 +87,7 @@ export default function SetupForm() {
             max={TOTAL_PAGES}
             value={page}
             onChange={(e) => setPage(Number(e.target.value))}
-            className="w-full rounded-lg border border-[#c9a15d]/50 bg-[#faf3e2] px-4 py-3 text-[#3b2a1a] outline-none focus:ring-2 focus:ring-[#b8935a]"
+            className={inputClass}
             placeholder={`Mushaf page (1–${TOTAL_PAGES})`}
           />
         )}
@@ -94,12 +95,8 @@ export default function SetupForm() {
         {mode === "range" && (
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <p className="text-xs text-[#7a5a30]">Start</p>
-              <select
-                value={startSurah}
-                onChange={(e) => setStartSurah(Number(e.target.value))}
-                className="w-full rounded-lg border border-[#c9a15d]/50 bg-[#faf3e2] px-3 py-2 text-[#3b2a1a] outline-none focus:ring-2 focus:ring-[#b8935a]"
-              >
+              <p className="text-xs text-white/50">Start</p>
+              <select value={startSurah} onChange={(e) => setStartSurah(Number(e.target.value))} className={selectClass}>
                 {surahs.map((s) => (
                   <option key={s.number} value={s.number}>
                     {s.number}. {s.name}
@@ -111,17 +108,13 @@ export default function SetupForm() {
                 min={1}
                 value={startAyah}
                 onChange={(e) => setStartAyah(Number(e.target.value))}
-                className="w-full rounded-lg border border-[#c9a15d]/50 bg-[#faf3e2] px-3 py-2 text-[#3b2a1a] outline-none focus:ring-2 focus:ring-[#b8935a]"
+                className={inputClass}
                 placeholder="Ayah"
               />
             </div>
             <div className="space-y-2">
-              <p className="text-xs text-[#7a5a30]">End</p>
-              <select
-                value={endSurah}
-                onChange={(e) => setEndSurah(Number(e.target.value))}
-                className="w-full rounded-lg border border-[#c9a15d]/50 bg-[#faf3e2] px-3 py-2 text-[#3b2a1a] outline-none focus:ring-2 focus:ring-[#b8935a]"
-              >
+              <p className="text-xs text-white/50">End</p>
+              <select value={endSurah} onChange={(e) => setEndSurah(Number(e.target.value))} className={selectClass}>
                 {surahs.map((s) => (
                   <option key={s.number} value={s.number}>
                     {s.number}. {s.name}
@@ -133,7 +126,7 @@ export default function SetupForm() {
                 min={1}
                 value={endAyah}
                 onChange={(e) => setEndAyah(Number(e.target.value))}
-                className="w-full rounded-lg border border-[#c9a15d]/50 bg-[#faf3e2] px-3 py-2 text-[#3b2a1a] outline-none focus:ring-2 focus:ring-[#b8935a]"
+                className={inputClass}
                 placeholder="Ayah"
               />
             </div>
@@ -141,13 +134,13 @@ export default function SetupForm() {
         )}
       </section>
 
-      <section>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="font-display text-sm font-semibold uppercase tracking-widest text-[#7a4a1e]">Reciters</h2>
-          <span className="text-xs text-[#7a5a30]">{selectedQaris.length} selected · reels cycle through them</span>
+      <section className="glass rounded-2xl p-5">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="font-display text-sm font-semibold uppercase tracking-widest text-emerald-200/80">Reciters</h2>
+          <span className="text-xs text-white/50">{selectedQaris.length} selected · reels cycle through them</span>
         </div>
-        <p className="text-xs text-[#7a5a30] mb-2">Murattal</p>
-        <div className="flex flex-wrap gap-2 mb-3">
+        <p className="mb-2 text-xs text-white/50">Murattal</p>
+        <div className="mb-3 flex flex-wrap gap-2">
           {murattal.map((q) => (
             <QariCheckbox
               key={q.id}
@@ -158,7 +151,7 @@ export default function SetupForm() {
             />
           ))}
         </div>
-        <p className="text-xs text-[#7a5a30] mb-2">Mujawwad</p>
+        <p className="mb-2 text-xs text-white/50">Mujawwad</p>
         <div className="flex flex-wrap gap-2">
           {mujawwad.map((q) => (
             <QariCheckbox
@@ -174,7 +167,7 @@ export default function SetupForm() {
 
       <button
         onClick={generate}
-        className="w-full rounded-full bg-[#7a2e2e] py-3 text-[#f5ecd7] font-display font-semibold text-lg tracking-wide hover:bg-[#8a3a3a] transition"
+        className="lift w-full rounded-full bg-emerald-500 py-3 font-display text-lg font-semibold tracking-wide text-emerald-950 transition hover:bg-emerald-400"
       >
         Generate Reels
       </button>
@@ -197,10 +190,10 @@ function QariCheckbox({
     <button
       onClick={() => onToggle(id)}
       aria-pressed={checked}
-      className={`px-3 py-2 rounded-lg text-sm transition border ${
+      className={`rounded-lg border px-3 py-2 text-sm transition ${
         checked
-          ? "bg-[#7a2e2e] text-[#f5ecd7] border-[#7a2e2e]"
-          : "bg-[#f5ecd7]/50 text-[#5a4530] border-[#c9a15d]/40 hover:bg-[#f5ecd7]"
+          ? "border-emerald-400 bg-emerald-500 text-emerald-950"
+          : "border-white/15 bg-white/5 text-white/70 hover:bg-white/10"
       }`}
     >
       {name}

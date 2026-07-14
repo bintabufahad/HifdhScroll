@@ -8,6 +8,12 @@ import { useEffect, useState } from "react";
  * accountability nudge to stay focused, in the spirit of the "someone is
  * watching" meme. Purely decorative; it doesn't actually track anything.
  */
+// Sustained focused attention typically starts to dip around the 10-minute
+// mark, so the Ustad checks in on roughly that cadence - long enough not to be
+// naggy, timed to when a person is most likely drifting.
+const FOCUS_SPAN_MS = 10 * 60 * 1000;
+const WATCH_DURATION_MS = 6000;
+
 export default function UstadWatcher() {
   const [peeking, setPeeking] = useState(false);
 
@@ -17,15 +23,16 @@ export default function UstadWatcher() {
     function schedule(delay: number) {
       timeout = setTimeout(() => {
         setPeeking(true);
-        // Stay for a few seconds, then retreat and schedule the next peek.
+        // Watch for a few seconds, then retreat until the next focus-span mark.
         timeout = setTimeout(() => {
           setPeeking(false);
-          schedule(18000 + Math.random() * 22000); // 18-40s until next peek
-        }, 4500);
+          // ±2 min of jitter so it doesn't feel mechanical.
+          schedule(FOCUS_SPAN_MS + (Math.random() - 0.5) * 4 * 60 * 1000);
+        }, WATCH_DURATION_MS);
       }, delay);
     }
 
-    schedule(9000); // first peek ~9s after arriving
+    schedule(FOCUS_SPAN_MS); // first check-in around the 10-minute mark
     return () => clearTimeout(timeout);
   }, []);
 

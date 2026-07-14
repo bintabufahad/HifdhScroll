@@ -7,9 +7,12 @@ import type { StudyTask } from "@/lib/types";
 export default function TaskList({
   tasks,
   onTasksChange,
+  fill = false,
 }: {
   tasks: StudyTask[];
   onTasksChange: (tasks: StudyTask[]) => void;
+  /** When true, the card fills its parent's height and the list scrolls inside. */
+  fill?: boolean;
 }) {
   const [title, setTitle] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -68,15 +71,15 @@ export default function TaskList({
   const doneCount = tasks.filter((t) => t.is_done).length;
 
   return (
-    <div className="glass rounded-2xl p-4">
-      <div className="mb-2 flex items-center justify-between">
+    <div className={`glass flex flex-col rounded-2xl p-4 ${fill ? "h-full min-h-0" : ""}`}>
+      <div className="mb-2 flex shrink-0 items-center justify-between">
         <p className="text-xs font-medium uppercase tracking-widest text-emerald-200/70">Study to-do list</p>
         <span className="text-xs text-white/50">
           {doneCount}/{tasks.length} done
         </span>
       </div>
 
-      <form onSubmit={addTask} className="mb-3 flex gap-2">
+      <form onSubmit={addTask} className="mb-3 flex shrink-0 gap-2">
         <input
           type="text"
           value={title}
@@ -96,7 +99,7 @@ export default function TaskList({
       {tasks.length === 0 ? (
         <p className="text-center text-sm text-white/45">No tasks yet — add your first one above.</p>
       ) : (
-        <ul className="flex flex-col gap-2">
+        <ul className={`flex flex-col gap-2 ${fill ? "min-h-0 flex-1 overflow-y-auto pr-1" : ""}`}>
           {tasks.map((task) => (
             <li
               key={task.id}

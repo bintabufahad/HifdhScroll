@@ -14,6 +14,7 @@ function formatTime(seconds: number): string {
   return `${m}:${s}`;
 }
 
+/** Compact focus timer - deliberately small, tucked in the sidebar corner. */
 export default function StudyTimer({ onSessionComplete }: { onSessionComplete: (seconds: number) => void }) {
   const [presetMinutes, setPresetMinutes] = useState(25);
   const [remaining, setRemaining] = useState(25 * 60);
@@ -46,17 +47,9 @@ export default function StudyTimer({ onSessionComplete }: { onSessionComplete: (
     setRunning(false);
   }
 
-  function reset() {
-    setRunning(false);
-    setRemaining(presetMinutes * 60);
-    elapsedRef.current = 0;
-  }
-
   function endAndLogNow() {
     setRunning(false);
-    if (elapsedRef.current > 0) {
-      onSessionComplete(elapsedRef.current);
-    }
+    if (elapsedRef.current > 0) onSessionComplete(elapsedRef.current);
     setRemaining(presetMinutes * 60);
     elapsedRef.current = 0;
   }
@@ -64,63 +57,47 @@ export default function StudyTimer({ onSessionComplete }: { onSessionComplete: (
   const progress = 1 - remaining / (presetMinutes * 60);
 
   return (
-    <div className="glass rounded-2xl p-4">
-      <p className="mb-2 text-xs font-medium uppercase tracking-widest text-emerald-200/70">Focus timer</p>
+    <div className="glass rounded-2xl px-3 py-2.5">
+      <div className="flex items-center gap-3">
+        <span className="font-display text-2xl font-bold tabular-nums text-white">{formatTime(remaining)}</span>
 
-      <div className="mb-3 flex justify-center gap-2">
-        {PRESETS_MINUTES.map((m) => (
-          <button
-            key={m}
-            type="button"
-            onClick={() => selectPreset(m)}
-            className={`rounded-full px-3 py-1 text-xs font-medium transition ${
-              presetMinutes === m
-                ? "bg-emerald-500 text-emerald-950"
-                : "border border-white/15 bg-white/5 text-white/70 hover:bg-white/10"
-            }`}
-          >
-            {m}m
-          </button>
-        ))}
-      </div>
-
-      {/* Circular-ish progress via a top bar. */}
-      <div className="mb-3 h-1.5 w-full overflow-hidden rounded-full bg-white/10">
-        <div
-          className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-emerald-500 transition-all duration-1000"
-          style={{ width: `${Math.round(progress * 100)}%` }}
-        />
-      </div>
-
-      <p className="text-center font-display text-5xl font-bold tabular-nums text-white">{formatTime(remaining)}</p>
-
-      <div className="mt-4 flex flex-wrap justify-center gap-2">
         <button
           type="button"
           onClick={() => setRunning((r) => !r)}
           disabled={remaining === 0}
-          className="lift rounded-full bg-emerald-500 px-5 py-2 text-sm font-medium text-emerald-950 hover:bg-emerald-400 disabled:opacity-50"
+          className="rounded-full bg-emerald-500 px-3 py-1 text-xs font-medium text-emerald-950 hover:bg-emerald-400 disabled:opacity-50"
         >
           {running ? "Pause" : "Start"}
         </button>
         <button
           type="button"
-          onClick={reset}
-          className="rounded-full border border-white/15 bg-white/5 px-5 py-2 text-sm font-medium text-white/80 hover:bg-white/10"
-        >
-          Reset
-        </button>
-        <button
-          type="button"
           onClick={endAndLogNow}
-          className="rounded-full border border-white/15 bg-white/5 px-5 py-2 text-sm font-medium text-white/80 hover:bg-white/10"
+          className="rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs font-medium text-white/75 hover:bg-white/10"
         >
-          End &amp; log
+          End
         </button>
+
+        <div className="ml-auto flex gap-1">
+          {PRESETS_MINUTES.map((m) => (
+            <button
+              key={m}
+              type="button"
+              onClick={() => selectPreset(m)}
+              className={`rounded px-1.5 py-0.5 text-[11px] font-medium transition ${
+                presetMinutes === m ? "bg-emerald-500 text-emerald-950" : "text-white/50 hover:text-white"
+              }`}
+            >
+              {m}
+            </button>
+          ))}
+        </div>
       </div>
-      <p className="mt-2 text-center text-xs text-white/45">
-        Finishing (or ending early with time on the clock) logs the session and earns points.
-      </p>
+      <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-white/10">
+        <div
+          className="h-full rounded-full bg-emerald-500 transition-all duration-1000"
+          style={{ width: `${Math.round(progress * 100)}%` }}
+        />
+      </div>
     </div>
   );
 }

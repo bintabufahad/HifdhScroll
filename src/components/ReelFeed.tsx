@@ -60,9 +60,9 @@ export default function ReelFeed({ config }: { config: ReelConfig }) {
 
   if (error) {
     return (
-      <div className="flex flex-1 flex-col items-center justify-center gap-4 bg-[#e8dcc0] px-6 text-center text-[#3b2a1a]">
+      <div className="bg-app-dark flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center text-white">
         <p className="text-lg">{error}</p>
-        <Link href="/reels" className="rounded-full bg-[#7a2e2e] px-5 py-2 text-[#f5ecd7] font-medium">
+        <Link href="/reels" className="rounded-full bg-emerald-500 px-5 py-2 font-medium text-emerald-950 hover:bg-emerald-400">
           Back to setup
         </Link>
       </div>
@@ -71,15 +71,15 @@ export default function ReelFeed({ config }: { config: ReelConfig }) {
 
   if (!ayahs) {
     return (
-      <div className="flex flex-1 items-center justify-center bg-[#e8dcc0] text-[#5a4530]">Loading passage…</div>
+      <div className="bg-app-dark flex flex-1 items-center justify-center text-white/60">Loading passage…</div>
     );
   }
 
   if (segments.length === 0) {
     return (
-      <div className="flex flex-1 flex-col items-center justify-center gap-4 bg-[#e8dcc0] px-6 text-center text-[#3b2a1a]">
+      <div className="bg-app-dark flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center text-white">
         <p className="text-lg">No ayahs found for this passage.</p>
-        <Link href="/reels" className="rounded-full bg-[#7a2e2e] px-5 py-2 text-[#f5ecd7] font-medium">
+        <Link href="/reels" className="rounded-full bg-emerald-500 px-5 py-2 font-medium text-emerald-950 hover:bg-emerald-400">
           Back to setup
         </Link>
       </div>

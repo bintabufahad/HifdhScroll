@@ -50,29 +50,30 @@ export default function WaitlistForm() {
 
   if (sent) {
     return (
-      <div className="mx-auto flex w-full max-w-md flex-col items-center gap-4 text-center">
-        <h2 className="font-display text-2xl font-bold text-[#3b2a1a]">Check your email</h2>
-        <p className="text-[#5a4530]">
-          We sent a sign-in link to <strong>{email}</strong>. Open it to activate your 14-day free trial.
+      <div className="glass mx-auto flex w-full max-w-md flex-col items-center gap-4 rounded-2xl p-6 text-center">
+        <h2 className="font-display text-2xl font-bold text-white">Check your email</h2>
+        <p className="text-white/70">
+          We sent a sign-in link to <strong className="text-emerald-300">{email}</strong>. Open it to activate your
+          14-day free trial.
         </p>
       </div>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mx-auto flex w-full max-w-md flex-col gap-4">
+    <form onSubmit={handleSubmit} className="glass mx-auto flex w-full max-w-md flex-col gap-4 rounded-2xl p-6">
       <div className="text-center">
-        <h1 className="font-display text-3xl font-bold text-[#3b2a1a]">Join the waitlist</h1>
-        <p className="mt-2 text-[#5a4530]">Sign up for instant access: a 14-day free trial of HifdhScroll.</p>
+        <h1 className="font-display text-3xl font-bold text-white">Join the waitlist</h1>
+        <p className="mt-2 text-white/60">Sign up for instant access: a 14-day free trial of HifdhScroll.</p>
       </div>
 
       {cameFromExpiredTrial && (
-        <p className="rounded-lg border border-[#c9a15d]/40 bg-[#f5ecd7] px-4 py-3 text-sm text-[#5a4530]">
+        <p className="rounded-lg border border-emerald-400/25 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
           Your free trial has ended. Join below to hear about what&apos;s next.
         </p>
       )}
       {cameFromAuthError && (
-        <p className="rounded-lg border border-red-800/30 bg-red-50 px-4 py-3 text-sm text-red-900">
+        <p className="rounded-lg border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
           That sign-in link didn&apos;t work (it may have expired). Please request a new one below.
         </p>
       )}
@@ -82,7 +83,7 @@ export default function WaitlistForm() {
         placeholder="Name (optional)"
         value={name}
         onChange={(e) => setName(e.target.value)}
-        className="rounded-lg border border-[#c9a15d]/50 bg-[#faf3e2] px-4 py-3 text-[#3b2a1a] outline-none focus:ring-2 focus:ring-[#b8935a]"
+        className="rounded-lg border border-white/15 bg-white/5 px-4 py-3 text-white outline-none placeholder:text-white/40 focus:ring-2 focus:ring-emerald-500/50"
       />
       <input
         type="email"
@@ -90,22 +91,22 @@ export default function WaitlistForm() {
         placeholder="Email"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
-        className="rounded-lg border border-[#c9a15d]/50 bg-[#faf3e2] px-4 py-3 text-[#3b2a1a] outline-none focus:ring-2 focus:ring-[#b8935a]"
+        className="rounded-lg border border-white/15 bg-white/5 px-4 py-3 text-white outline-none placeholder:text-white/40 focus:ring-2 focus:ring-emerald-500/50"
       />
       <textarea
         placeholder="Any suggestions or feedback? (optional)"
         value={suggestion}
         onChange={(e) => setSuggestion(e.target.value)}
         rows={3}
-        className="rounded-lg border border-[#c9a15d]/50 bg-[#faf3e2] px-4 py-3 text-[#3b2a1a] outline-none focus:ring-2 focus:ring-[#b8935a]"
+        className="rounded-lg border border-white/15 bg-white/5 px-4 py-3 text-white outline-none placeholder:text-white/40 focus:ring-2 focus:ring-emerald-500/50"
       />
 
-      {error && <p className="text-sm text-red-800">{error}</p>}
+      {error && <p className="text-sm text-red-300">{error}</p>}
 
       <button
         type="submit"
         disabled={submitting}
-        className="w-full rounded-full bg-[#7a2e2e] py-3 font-display font-semibold text-[#f5ecd7] hover:bg-[#8a3a3a] disabled:opacity-60"
+        className="lift w-full rounded-full bg-emerald-500 py-3 font-display font-semibold text-emerald-950 hover:bg-emerald-400 disabled:opacity-60"
       >
         {submitting ? "Sending…" : "Email me a sign-in link"}
       </button>

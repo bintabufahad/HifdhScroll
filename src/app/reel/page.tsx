@@ -18,9 +18,9 @@ export default async function ReelPage({
 
   if ("error" in result) {
     return (
-      <div className="flex flex-1 flex-col items-center justify-center gap-4 bg-[#e8dcc0] px-6 text-center text-[#3b2a1a]">
+      <div className="bg-app-dark flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center text-white">
         <p className="text-lg">{result.error}</p>
-        <Link href="/reels" className="rounded-full bg-[#7a2e2e] px-5 py-2 text-[#f5ecd7] font-medium">
+        <Link href="/reels" className="rounded-full bg-emerald-500 px-5 py-2 font-medium text-emerald-950 hover:bg-emerald-400">
           Back to setup
         </Link>
       </div>

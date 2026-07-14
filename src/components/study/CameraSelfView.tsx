@@ -153,20 +153,19 @@ export default function CameraSelfView({ className = "" }: { className?: string 
       {recordingUrl && (
         <div className="mt-3 rounded-xl border border-white/10 bg-black/30 p-2">
           <p className="mb-2 text-center text-xs text-emerald-200/80">Your recording (stays on this device)</p>
-          <video src={recordingUrl} controls className="w-full rounded-lg" />
+          <video src={recordingUrl} controls className="max-h-40 w-full rounded-lg" />
           <a
             href={recordingUrl}
             download={`study-session-${new Date().toISOString().slice(0, 19)}.webm`}
-            className="mt-2 block rounded-full bg-emerald-500 py-2 text-center text-sm font-medium text-emerald-950 hover:bg-emerald-400"
+            className="mt-2 block rounded-full bg-emerald-500 py-1.5 text-center text-sm font-medium text-emerald-950 hover:bg-emerald-400"
           >
             ↓ Download recording
           </a>
         </div>
       )}
 
-      <p className="mt-3 text-center text-xs text-white/45">
-        Seeing (and recording) yourself, like in a real class, helps you stay focused. Nothing is uploaded or sent
-        anywhere — recordings live only on your device.
+      <p className="mt-2 text-center text-[11px] text-white/40">
+        Recording stays only on your device — nothing is uploaded or sent anywhere.
       </p>
     </div>
   );
