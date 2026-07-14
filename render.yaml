@@ -6,7 +6,9 @@ services:
     region: oregon
     branch: claude/app-deployment-plan-g48tfj
     buildCommand: npm ci --include=dev && npm run build
-    startCommand: npm run start
+    # next start already reads $PORT and binds 0.0.0.0, but bind explicitly so
+    # Render's port scan can never miss it.
+    startCommand: npm run start -- -H 0.0.0.0 -p $PORT
     envVars:
       - key: NODE_VERSION
         value: 20.9.0
