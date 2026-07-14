@@ -17,11 +17,19 @@ export async function proxy(request: NextRequest) {
     return supabaseResponse;
   }
 
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from("profiles")
     .select("trial_ends_at, feedback_submitted_at")
     .eq("id", user.id)
     .single();
+
+  // If the profile read failed for any reason other than "no such row"
+  // (PGRST116) - e.g. a transient PostgREST/network hiccup - we can't tell
+  // whether the trial is active, so fail open and let the request through
+  // rather than wrongly bouncing a signed-in user off /reel.
+  if (profileError && profileError.code !== "PGRST116") {
+    return supabaseResponse;
+  }
 
   const trialActive = !!profile?.trial_ends_at && new Date(profile.trial_ends_at).getTime() > Date.now();
   const feedbackDone = !!profile?.feedback_submitted_at;
