@@ -13,11 +13,14 @@ export default function ReelsSetupPage() {
           Pick a surah, page, or ayah range — generate a set of short reels with Arabic text, translation, and
           recitation, each in its own scenery.
         </p>
-        <p className="mt-2 text-sm text-white/45">
-          <Link href="/" className="text-emerald-300 underline underline-offset-2 hover:text-emerald-200">
+        <div className="mt-4 flex justify-center">
+          <Link
+            href="/"
+            className="lift inline-flex items-center gap-1 rounded-full bg-emerald-500 px-5 py-2 text-sm font-semibold text-emerald-950 transition hover:bg-emerald-400"
+          >
             ← Home
           </Link>
-        </p>
+        </div>
       </header>
       <div className="animate-rise-in">
         <SetupForm />

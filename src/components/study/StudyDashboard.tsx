@@ -61,7 +61,7 @@ export default function StudyDashboard({
       <header className="mx-auto mb-3 flex w-full max-w-[1600px] items-center justify-between">
         <Link
           href="/"
-          className="rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs text-white/70 hover:bg-white/10"
+          className="lift inline-flex items-center gap-1 rounded-full bg-emerald-500 px-4 py-1.5 text-sm font-semibold text-emerald-950 transition hover:bg-emerald-400"
         >
           ← Home
         </Link>
