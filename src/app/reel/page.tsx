@@ -20,7 +20,7 @@ export default async function ReelPage({
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-4 bg-[#e8dcc0] px-6 text-center text-[#3b2a1a]">
         <p className="text-lg">{result.error}</p>
-        <Link href="/" className="rounded-full bg-[#7a2e2e] px-5 py-2 text-[#f5ecd7] font-medium">
+        <Link href="/reels" className="rounded-full bg-[#7a2e2e] px-5 py-2 text-[#f5ecd7] font-medium">
           Back to setup
         </Link>
       </div>

@@ -20,9 +20,9 @@ export default function GamificationBar({ stats }: { stats: ProfileStats }) {
           <span
             key={b.id}
             title={b.hint}
-            className={`rounded-full border px-3 py-1 text-xs font-medium ${
+            className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
               b.achieved
-                ? "border-[#c9a15d] bg-[#c9a15d]/30 text-[#3b2a1a]"
+                ? "badge-glow border-[#c9a15d] bg-[#c9a15d]/30 text-[#3b2a1a]"
                 : "border-[#c9a15d]/20 bg-transparent text-[#7a5a30]/50"
             }`}
           >

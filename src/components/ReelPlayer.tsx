@@ -130,7 +130,7 @@ export default function ReelPlayer({
 
       <div className="relative z-10 shrink-0 px-4 pt-4">
         <div className="flex items-center justify-between text-sm text-white">
-          <Link href="/" className="rounded-full bg-black/30 px-3 py-1 text-white/90 backdrop-blur">
+          <Link href="/reels" className="rounded-full bg-black/30 px-3 py-1 text-white/90 backdrop-blur">
             ‹ New reels
           </Link>
           <span className="rounded-full bg-black/30 px-3 py-1 text-xs text-white/90 backdrop-blur">
