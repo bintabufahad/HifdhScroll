@@ -2,19 +2,29 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import LecturePanel from "./LecturePanel";
-import CameraSelfView from "./CameraSelfView";
+import MainStage, { type StageMode } from "./MainStage";
+import CameraView from "./CameraView";
+import TeacherBox from "./TeacherBox";
 import StudyTimer from "./StudyTimer";
 import TaskList from "./TaskList";
 import MusicPlayer from "./MusicPlayer";
 import CoursePlaylist from "./CoursePlaylist";
 import UstadWatcher from "./UstadWatcher";
+import { useCamera } from "./useCamera";
 import type { StudyTask } from "@/lib/types";
 
 export default function StudyDashboard({ initialTasks }: { initialTasks: StudyTask[] }) {
   const [tasks, setTasks] = useState(initialTasks);
   const [toast, setToast] = useState("");
   const [lectureId, setLectureId] = useState<string | null>(null);
+  const [openPanel, setOpenPanel] = useState<"music" | "course" | null>(null);
+  const camera = useCamera();
+
+  // The big slot shows the lecture if there is one, else the camera (when on),
+  // else the placeholder teacher. Whatever isn't in the big slot goes small in
+  // the sidebar - so with no lecture and the camera on, you're big and the
+  // teacher is small; otherwise the camera is the small sidebar tile.
+  const mode: StageMode = lectureId ? "lecture" : camera.cameraOn ? "camera" : "teacher";
 
   function handleSessionComplete(seconds: number) {
     const minutes = Math.max(1, Math.round(seconds / 60));
@@ -24,8 +34,18 @@ export default function StudyDashboard({ initialTasks }: { initialTasks: StudyTa
 
   return (
     <div className="bg-app-dark relative flex flex-1 flex-col px-3 py-4 sm:px-5">
-      <MusicPlayer />
-      <CoursePlaylist onPlayLecture={setLectureId} />
+      <MusicPlayer
+        open={openPanel === "music"}
+        onToggle={() => setOpenPanel((p) => (p === "music" ? null : "music"))}
+      />
+      <CoursePlaylist
+        open={openPanel === "course"}
+        onToggle={() => setOpenPanel((p) => (p === "course" ? null : "course"))}
+        onPlayLecture={(id) => {
+          setLectureId(id);
+          setOpenPanel(null);
+        }}
+      />
       <UstadWatcher />
 
       {toast && (
@@ -49,18 +69,20 @@ export default function StudyDashboard({ initialTasks }: { initialTasks: StudyTa
         <span className="w-14" />
       </header>
 
-      {/* Desktop: a full-height two-column workspace so nothing needs scrolling
-          or fullscreen - the lecture fills the left, and the camera + to-do
-          list fill a right column with the (unimportant) timer tucked at the
-          bottom corner. Mobile: everything stacks and scrolls. */}
       <main className="mx-auto grid w-full max-w-[1600px] flex-1 grid-cols-1 gap-4 lg:h-[calc(100dvh-6rem)] lg:grid-cols-[minmax(0,1fr)_23rem]">
         <div className="animate-rise-in min-h-0">
-          <LecturePanel lectureId={lectureId} onSetLecture={setLectureId} onClear={() => setLectureId(null)} fill />
+          <MainStage
+            mode={mode}
+            lectureId={lectureId}
+            camera={camera}
+            onSetLecture={setLectureId}
+            onClear={() => setLectureId(null)}
+          />
         </div>
 
         <aside className="flex min-h-0 flex-col gap-4">
-          <div className="animate-rise-in shrink-0">
-            <CameraSelfView />
+          <div className="animate-rise-in glass shrink-0 rounded-2xl p-3">
+            {mode === "camera" ? <TeacherBox /> : <CameraView camera={camera} />}
           </div>
           <div className="animate-rise-in flex min-h-0 flex-1 flex-col">
             <TaskList tasks={tasks} onTasksChange={setTasks} fill />

@@ -36,9 +36,8 @@ function loadStoredTracks(): Track[] {
   }
 }
 
-export default function MusicPlayer() {
+export default function MusicPlayer({ open, onToggle }: { open: boolean; onToggle: () => void }) {
   const audioRef = useRef<HTMLAudioElement>(null);
-  const [open, setOpen] = useState(false);
   const [tracks, setTracks] = useState<Track[]>(loadStoredTracks);
   const [input, setInput] = useState("");
   const [currentIndex, setCurrentIndex] = useState<number | null>(null);
@@ -114,19 +113,21 @@ export default function MusicPlayer() {
 
       <button
         type="button"
-        onClick={() => setOpen((v) => !v)}
+        onClick={onToggle}
         aria-label="Audio player"
         className={`lift flex h-11 w-11 items-center justify-center rounded-full border shadow-md transition ${
-          playing
-            ? "border-emerald-400/60 bg-emerald-500 text-emerald-950 emerald-glow"
-            : "glass-strong text-emerald-200 hover:text-white"
+          open
+            ? "border-emerald-400 bg-emerald-500 text-emerald-950"
+            : playing
+              ? "border-emerald-400/60 bg-emerald-500 text-emerald-950 emerald-glow"
+              : "glass-strong text-emerald-200 hover:text-white"
         }`}
       >
         <span className={`text-lg ${playing ? "animate-pulse" : ""}`}>♪</span>
       </button>
 
       {open && (
-        <div className="glass-strong animate-rise-in mt-2 w-72 rounded-xl p-3 shadow-xl">
+        <div className="animate-rise-in fixed right-3 top-[4.25rem] w-72 rounded-xl border border-white/12 bg-[#0c1512] p-3 shadow-2xl">
           <p className="mb-2 text-xs font-medium uppercase tracking-widest text-emerald-200/70">Background audio</p>
 
           <form onSubmit={addTrack} className="mb-3 flex gap-2">

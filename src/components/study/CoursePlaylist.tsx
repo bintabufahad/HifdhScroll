@@ -36,8 +36,15 @@ function thumb(id: string): string {
  * panel; clicking a PDF opens it. Items can be checked off, and the header shows
  * course progress. Stored in localStorage so it needs no backend.
  */
-export default function CoursePlaylist({ onPlayLecture }: { onPlayLecture: (id: string) => void }) {
-  const [open, setOpen] = useState(false);
+export default function CoursePlaylist({
+  open,
+  onToggle,
+  onPlayLecture,
+}: {
+  open: boolean;
+  onToggle: () => void;
+  onPlayLecture: (id: string) => void;
+}) {
   const [items, setItems] = useState<CourseItem[]>(loadCourse);
   const [type, setType] = useState<ItemType>("youtube");
   const [url, setUrl] = useState("");
@@ -92,7 +99,6 @@ export default function CoursePlaylist({ onPlayLecture }: { onPlayLecture: (id: 
       const id = extractYouTubeId(item.url);
       if (id) {
         onPlayLecture(id);
-        setOpen(false);
       }
     } else {
       window.open(item.url, "_blank", "noopener,noreferrer");
@@ -124,16 +130,20 @@ export default function CoursePlaylist({ onPlayLecture }: { onPlayLecture: (id: 
     <div className="fixed right-[4.75rem] top-4 z-50">
       <button
         type="button"
-        onClick={() => setOpen((v) => !v)}
+        onClick={onToggle}
         aria-label="Course playlist"
-        className="lift glass-strong flex h-11 items-center gap-1 rounded-full px-3 text-emerald-200 shadow-md hover:text-white"
+        className={`lift flex h-11 items-center gap-1 rounded-full border px-3 shadow-md transition ${
+          open
+            ? "border-emerald-400 bg-emerald-500 text-emerald-950"
+            : "glass-strong border-transparent text-emerald-200 hover:text-white"
+        }`}
       >
         <span className="text-lg">☰</span>
         <span className="hidden text-xs font-medium sm:inline">Course</span>
       </button>
 
       {open && (
-        <div className="glass-strong animate-rise-in mt-2 w-80 rounded-xl p-3 shadow-xl">
+        <div className="animate-rise-in fixed right-3 top-[4.25rem] w-80 rounded-xl border border-white/12 bg-[#0c1512] p-3 shadow-2xl">
           <div className="mb-2 flex items-center justify-between">
             <p className="text-xs font-medium uppercase tracking-widest text-emerald-200/70">Structured course</p>
             <span className="text-xs text-white/50">
