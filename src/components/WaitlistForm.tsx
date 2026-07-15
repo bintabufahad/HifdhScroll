@@ -29,7 +29,6 @@ export default function WaitlistForm() {
   const searchParams = useSearchParams();
   const cameFromExpiredTrial = searchParams.get("from") === "trial-ended";
   const cameFromAuthError = searchParams.get("from") === "auth-error";
-  const nextParam = searchParams.get("next");
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -43,16 +42,14 @@ export default function WaitlistForm() {
     setSubmitting(true);
     setError("");
 
-    const safeNext = nextParam && nextParam.startsWith("/") && !nextParam.startsWith("//") ? nextParam : "/";
-    const redirectUrl = new URL(`${window.location.origin}/auth/callback`);
-    if (safeNext !== "/") {
-      redirectUrl.searchParams.set("next", safeNext);
-    }
-
+    // Keep the redirect URL free of query params: Supabase appends its own
+    // auth code to this URL, and an existing query string can collide with it
+    // and break the code exchange. The user lands on the home hub after
+    // sign-in, which is fine.
     const options = {
       email,
       options: {
-        emailRedirectTo: redirectUrl.toString(),
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
         data: {
           name: name.trim() || undefined,
           suggestion: suggestion.trim() || undefined,

@@ -45,11 +45,17 @@ export async function GET(request: Request) {
   if (token_hash && type) {
     const { error } = await supabase.auth.verifyOtp({ type, token_hash });
     if (!error) return response;
+    console.error("auth/callback verifyOtp failed:", error.message);
   }
 
   if (code) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) return response;
+    console.error("auth/callback exchangeCodeForSession failed:", error.message);
+  }
+
+  if (!token_hash && !code) {
+    console.error("auth/callback: no token_hash or code in", request.url);
   }
 
   return NextResponse.redirect(`${origin}/waitlist?from=auth-error`);
