@@ -3,15 +3,14 @@ import SetupForm from "@/components/SetupForm";
 
 export default function ReelsSetupPage() {
   return (
-    <div className="bg-app-dark flex flex-1 flex-col px-6 py-10 sm:py-16">
-      <header className="animate-rise-in mx-auto mb-10 w-full max-w-xl text-center">
-        <h1 className="font-display text-4xl font-bold tracking-tight text-white">
+    <div className="bg-app-dark flex flex-1 flex-col px-4 py-8 sm:px-6 sm:py-12">
+      <header className="animate-rise-in mx-auto mb-6 w-full max-w-xl text-center sm:mb-8">
+        <h1 className="font-display text-3xl font-bold tracking-tight text-white sm:text-4xl">
           Quran <span className="text-emerald-300">Reels</span>
         </h1>
-        <div className="mx-auto mt-3 h-px w-24 bg-gradient-to-r from-transparent via-emerald-400/70 to-transparent" />
-        <p className="mt-4 text-white/60">
-          Pick a surah, page, or ayah range — generate a set of short reels with Arabic text, translation, and
-          recitation, each in its own scenery.
+        <div className="mx-auto mt-2 h-px w-20 bg-gradient-to-r from-transparent via-emerald-400/70 to-transparent sm:mt-3 sm:w-24" />
+        <p className="mx-auto mt-3 max-w-md text-sm text-white/60 sm:text-base">
+          Pick a surah, page, or ayah range — generate short reels with Arabic text, translation, and recitation.
         </p>
         <div className="mt-4 flex justify-center">
           <Link

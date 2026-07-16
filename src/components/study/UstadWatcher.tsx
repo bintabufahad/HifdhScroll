@@ -113,7 +113,7 @@ export default function UstadWatcher({ enabled }: { enabled: boolean }) {
     >
       <div className="flex items-end gap-2">
         {peeking && (
-          <span className="mb-14 rounded-full bg-black/70 px-3 py-1 text-xs text-emerald-200/90 backdrop-blur">
+          <span className="mb-10 hidden max-w-[45vw] rounded-full bg-black/70 px-3 py-1 text-xs text-emerald-200/90 backdrop-blur sm:mb-14 sm:inline">
             Assalamu alaikum — the Ustad is watching. Stay focused.
           </span>
         )}
@@ -126,7 +126,7 @@ export default function UstadWatcher({ enabled }: { enabled: boolean }) {
 /** A friendly, dignified scholar: turban (imamah), calm face, beard, and robe. */
 function UstadFigure() {
   return (
-    <svg viewBox="0 0 120 210" className="float-soft h-48 w-28 drop-shadow-[0_0_16px_rgba(16,185,129,0.3)]">
+    <svg viewBox="0 0 120 210" className="float-soft h-32 w-20 drop-shadow-[0_0_16px_rgba(16,185,129,0.3)] sm:h-48 sm:w-28">
       <defs>
         <linearGradient id="ustadRobe" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="#14493b" />

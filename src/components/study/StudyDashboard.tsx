@@ -58,20 +58,20 @@ export default function StudyDashboard({
         </div>
       )}
 
-      <header className="mx-auto mb-3 flex w-full max-w-[1600px] items-center justify-between">
+      {/* pr leaves room for the floating Course button so the title never sits under it. */}
+      <header className="mx-auto mb-3 flex w-full max-w-[1600px] items-center gap-3 pr-14 sm:pr-24">
         <Link
           href="/"
-          className="lift inline-flex items-center gap-1 rounded-full bg-emerald-500 px-4 py-1.5 text-sm font-semibold text-emerald-950 transition hover:bg-emerald-400"
+          className="lift inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-emerald-950 transition hover:bg-emerald-400 sm:px-4 sm:text-sm"
         >
           ← Home
         </Link>
-        <h1 className="font-display text-xl font-bold text-white sm:text-2xl">
+        <h1 className="truncate font-display text-base font-bold text-white sm:text-2xl">
           Student of <span className="text-emerald-300">Knowledge</span>
         </h1>
-        <span className="w-14" />
       </header>
 
-      <main className="mx-auto grid w-full max-w-[1600px] flex-1 grid-cols-1 gap-4 lg:h-[calc(100dvh-6rem)] lg:grid-cols-[minmax(0,1fr)_23rem]">
+      <main className="mx-auto grid w-full max-w-[1600px] flex-1 grid-cols-1 gap-3 sm:gap-4 lg:h-[calc(100dvh-6rem)] lg:grid-cols-[minmax(0,1fr)_23rem]">
         <div className="animate-rise-in min-h-0">
           <MainStage
             mode={mode}
