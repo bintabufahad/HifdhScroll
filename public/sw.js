@@ -1,4 +1,4 @@
-const CACHE_NAME = "hifdhscroll-shell-v2";
+const CACHE_NAME = "rusookh-shell-v1";
 const APP_SHELL = ["/", "/manifest.webmanifest"];
 
 self.addEventListener("install", (event) => {

@@ -40,7 +40,7 @@ export default function FeedbackForm() {
       <div className="text-center">
         <h1 className="font-display text-3xl font-bold text-white">Assalamu Alaikum</h1>
         <p className="mt-2 text-white/65">
-          Your 14-day trial of HifdhScroll has come to an end. It has been an honor to have you with us.
+          Your 14-day trial of Rusookh has come to an end. It has been an honor to have you with us.
         </p>
       </div>
 
@@ -48,7 +48,7 @@ export default function FeedbackForm() {
 
       <p className="text-white/65">
         Allah (subhanahu wa ta&apos;ala) reminds us of the great virtue in inviting others toward His words. A few
-        honest lines from you — sharing what HifdhScroll meant to your journey — may be exactly the invitation that
+        honest lines from you — sharing what Rusookh meant to your journey — may be exactly the invitation that
         turns someone&apos;s idle minutes on Instagram into a few minutes with the Qur&apos;an instead. We would be
         deeply grateful for your review, and as a token of that gratitude, completing it unlocks{" "}
         <strong className="text-emerald-300">30 additional days</strong> of full access, in shaa Allah.
@@ -88,13 +88,13 @@ export default function FeedbackForm() {
             onChange={(e) => setReview(e.target.value)}
             rows={4}
             className="w-full rounded-lg border border-white/15 bg-white/5 px-4 py-3 text-white outline-none placeholder:text-white/40 focus:ring-2 focus:ring-emerald-500/50"
-            placeholder="Share your experience with HifdhScroll…"
+            placeholder="Share your experience with Rusookh…"
           />
         </div>
 
         <div>
           <label htmlFor="pricing" className="mb-2 block text-sm font-medium text-white/85">
-            As we work to build a sustainable, ad-free HifdhScroll for the Ummah, we would value your counsel: what
+            As we work to build a sustainable, ad-free Rusookh for the Ummah, we would value your counsel: what
             features or value would make this app worth paying for?
           </label>
           <textarea
@@ -104,7 +104,7 @@ export default function FeedbackForm() {
             onChange={(e) => setPricingAnswer(e.target.value)}
             rows={4}
             className="w-full rounded-lg border border-white/15 bg-white/5 px-4 py-3 text-white outline-none placeholder:text-white/40 focus:ring-2 focus:ring-emerald-500/50"
-            placeholder="What would make HifdhScroll worth paying for?"
+            placeholder="What would make Rusookh worth paying for?"
           />
         </div>
 

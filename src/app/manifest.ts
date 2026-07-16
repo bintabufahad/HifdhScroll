@@ -2,9 +2,9 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "HifdhScroll",
-    short_name: "HifdhScroll",
-    description: "Scroll through Quran reels — Arabic text, translation, and recitation over a scenic backdrop.",
+    name: "Rusookh",
+    short_name: "Rusookh",
+    description: "Memorize the Qur'an through short reels, and study with focus as a student of knowledge.",
     start_url: "/",
     display: "standalone",
     background_color: "#022c22",

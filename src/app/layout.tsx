@@ -26,13 +26,13 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "HifdhScroll",
-  description: "Scroll through Quran reels — Arabic text, translation, and recitation over a scenic backdrop.",
+  title: "Rusookh",
+  description: "Memorize the Qur'an through short reels, and study with focus as a student of knowledge.",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "HifdhScroll",
+    title: "Rusookh",
   },
 };
 

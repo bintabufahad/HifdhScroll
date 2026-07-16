@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: hifdhscroll
+    name: rusookh
     runtime: node
     plan: free
     region: oregon

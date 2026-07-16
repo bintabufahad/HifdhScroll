@@ -1,6 +1,6 @@
-# HifdhScroll
+# Rusookh
 
-An installable web app (PWA) for scrolling through Quran "reels" — Arabic text and English translation synced to a reciter's audio, over an animated scenic backdrop. Works on any device from a browser (Android, iOS, Windows, HarmonyOS, etc.) — no app store required.
+Rusookh (رسوخ, "firm-rootedness in knowledge") is an installable web app (PWA) for memorizing the Qur'an through short "reels" — Arabic text and English translation synced to a reciter's audio, over an animated scenic backdrop — plus a focused study space for students of knowledge. Works on any device from a browser (Android, iOS, Windows, HarmonyOS, etc.) — no app store required.
 
 ## How it works
 

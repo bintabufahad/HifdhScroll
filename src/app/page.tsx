@@ -10,7 +10,7 @@ export default function Home() {
       </Suspense>
       <header className="animate-rise-in mb-6 w-full max-w-2xl text-center sm:mb-10">
         <h1 className="font-display text-4xl font-bold tracking-tight text-white sm:text-6xl">
-          Hifdh<span className="text-emerald-300">Scroll</span>
+          Ru<span className="text-emerald-300">sookh</span>
         </h1>
         <div className="mx-auto mt-2 h-px w-20 bg-gradient-to-r from-transparent via-emerald-400/70 to-transparent sm:mt-3 sm:w-24" />
         <p className="mx-auto mt-3 max-w-md text-sm text-white/60 sm:mt-4 sm:text-base">

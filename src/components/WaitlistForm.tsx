@@ -107,7 +107,7 @@ export default function WaitlistForm() {
     <form onSubmit={handleSubmit} className="glass mx-auto flex w-full max-w-md flex-col gap-4 rounded-2xl p-6">
       <div className="text-center">
         <h1 className="font-display text-3xl font-bold text-white">Join the waitlist</h1>
-        <p className="mt-2 text-white/60">Sign up for instant access: a 14-day free trial of HifdhScroll.</p>
+        <p className="mt-2 text-white/60">Sign up for instant access: a 14-day free trial of Rusookh.</p>
       </div>
 
       {cameFromExpiredTrial && (
