@@ -19,7 +19,10 @@ import type { EmailOtpType } from "@supabase/supabase-js";
  * there afterwards instead of always going home.
  */
 export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url);
+  const { searchParams } = new URL(request.url);
+  // Behind Render's proxy, request.url uses the internal bind host
+  // (0.0.0.0:10000), so build redirects from the public forwarded host instead.
+  const origin = publicOrigin(request);
   const token_hash = searchParams.get("token_hash");
   const type = searchParams.get("type") as EmailOtpType | null;
   const code = searchParams.get("code");
@@ -59,6 +62,14 @@ export async function GET(request: Request) {
   }
 
   return NextResponse.redirect(`${origin}/waitlist?from=auth-error`);
+}
+
+/** The public origin (scheme + host) from Render's forwarded headers, not the internal bind address. */
+function publicOrigin(request: Request): string {
+  const host = request.headers.get("x-forwarded-host") || request.headers.get("host");
+  const proto = request.headers.get("x-forwarded-proto") || "https";
+  if (host) return `${proto}://${host}`;
+  return new URL(request.url).origin;
 }
 
 /** Only allow same-site relative paths, so `next` can't be used as an open redirect. */
