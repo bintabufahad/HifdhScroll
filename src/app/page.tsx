@@ -1,8 +1,13 @@
 import Link from "next/link";
+import { Suspense } from "react";
+import AuthErrorNotice from "@/components/AuthErrorNotice";
 
 export default function Home() {
   return (
     <div className="bg-app-dark flex flex-1 flex-col items-center justify-center px-6 py-12">
+      <Suspense fallback={null}>
+        <AuthErrorNotice />
+      </Suspense>
       <header className="animate-rise-in mb-10 w-full max-w-2xl text-center">
         <h1 className="font-display text-5xl font-bold tracking-tight text-white sm:text-6xl">
           Hifdh<span className="text-emerald-300">Scroll</span>
