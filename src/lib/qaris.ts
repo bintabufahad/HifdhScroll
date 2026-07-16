@@ -54,19 +54,19 @@ export const qaris: Qari[] = [
   {
     id: "minshawi",
     name: "Al-Minshawi",
-    style: "Mujawwad",
+    style: "Murattal",
     everyAyahFolders: ["Minshawy_Mujawwad_128kbps", "Minshawy_Mujawwad_192kbps", "Minshawy_Murattal_128kbps"],
   },
   {
     id: "abdulbasit",
     name: "Abdul Basit",
-    style: "Mujawwad",
+    style: "Murattal",
     everyAyahFolders: ["Abdul_Basit_Mujawwad_128kbps", "Abdul_Basit_Mujawwad_64kbps"],
   },
   {
     id: "hussary",
     name: "Al-Hussary",
-    style: "Mujawwad",
+    style: "Murattal",
     everyAyahFolders: ["Husary_Mujawwad_128kbps", "Husary_Mujawwad_192kbps", "Husary_128kbps"],
   },
 ];

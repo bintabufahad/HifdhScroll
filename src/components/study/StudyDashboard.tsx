@@ -82,15 +82,17 @@ export default function StudyDashboard({
           />
         </div>
 
-        <aside className="flex min-h-0 flex-col gap-4">
-          <div className="animate-rise-in glass shrink-0 rounded-2xl p-3">
+        <aside className="flex min-h-0 flex-col gap-3 sm:gap-4">
+          {/* Secondary tile (whichever of camera/teacher isn't in the big slot):
+              kept small on phones so it doesn't push everything down. */}
+          <div className="animate-rise-in glass mx-auto w-full max-w-[16rem] shrink-0 rounded-2xl p-2 sm:max-w-none sm:p-3">
             {mode === "camera" ? <TeacherBox /> : <CameraView camera={camera} />}
-          </div>
-          <div className="animate-rise-in flex min-h-0 flex-1 flex-col">
-            <TaskList tasks={tasks} onTasksChange={setTasks} fill />
           </div>
           <div className="animate-rise-in shrink-0">
             <StudyTimer onSessionComplete={handleSessionComplete} />
+          </div>
+          <div className="animate-rise-in flex min-h-0 flex-1 flex-col">
+            <TaskList tasks={tasks} onTasksChange={setTasks} fill />
           </div>
         </aside>
       </main>

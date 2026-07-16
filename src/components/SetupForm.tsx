@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { surahs, TOTAL_PAGES } from "@/lib/surahs";
 import { qaris } from "@/lib/qaris";
@@ -16,9 +16,6 @@ export default function SetupForm() {
   const [endSurah, setEndSurah] = useState(1);
   const [endAyah, setEndAyah] = useState(7);
   const [selectedQaris, setSelectedQaris] = useState<string[]>(qaris.map((q) => q.id));
-
-  const murattal = useMemo(() => qaris.filter((q) => q.style === "Murattal"), []);
-  const mujawwad = useMemo(() => qaris.filter((q) => q.style === "Mujawwad"), []);
 
   function toggleQari(id: string) {
     setSelectedQaris((prev) => {
@@ -139,21 +136,8 @@ export default function SetupForm() {
           <h2 className="font-display text-sm font-semibold uppercase tracking-widest text-emerald-200/80">Reciters</h2>
           <span className="text-right text-xs text-white/50">{selectedQaris.length} selected</span>
         </div>
-        <p className="mb-2 text-xs text-white/50">Murattal</p>
-        <div className="mb-3 flex flex-wrap gap-2">
-          {murattal.map((q) => (
-            <QariCheckbox
-              key={q.id}
-              id={q.id}
-              name={q.name}
-              checked={selectedQaris.includes(q.id)}
-              onToggle={toggleQari}
-            />
-          ))}
-        </div>
-        <p className="mb-2 text-xs text-white/50">Mujawwad</p>
-        <div className="flex flex-wrap gap-2">
-          {mujawwad.map((q) => (
+        <div className="flex flex-wrap gap-1.5">
+          {qaris.map((q) => (
             <QariCheckbox
               key={q.id}
               id={q.id}
@@ -190,7 +174,7 @@ function QariCheckbox({
     <button
       onClick={() => onToggle(id)}
       aria-pressed={checked}
-      className={`rounded-lg border px-3 py-2 text-sm transition ${
+      className={`rounded-full border px-2.5 py-1 text-xs transition ${
         checked
           ? "border-emerald-400 bg-emerald-500 text-emerald-950"
           : "border-white/15 bg-white/5 text-white/70 hover:bg-white/10"

@@ -123,40 +123,40 @@ export default function UstadWatcher({ enabled }: { enabled: boolean }) {
   );
 }
 
-/** A friendly, dignified scholar: turban (imamah), calm face, beard, and robe. */
+/** A dignified, faceless scholar: turban (imamah), a full beard, and a robe - no
+ * eyes, nose or mouth (the face is left blank), but clearly read as an Ustad. */
 function UstadFigure() {
   return (
     <svg viewBox="0 0 120 210" className="float-soft h-32 w-20 drop-shadow-[0_0_16px_rgba(16,185,129,0.3)] sm:h-48 sm:w-28">
       <defs>
         <linearGradient id="ustadRobe" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#14493b" />
-          <stop offset="100%" stopColor="#0a231c" />
+          <stop offset="0%" stopColor="#15503f" />
+          <stop offset="100%" stopColor="#081f18" />
+        </linearGradient>
+        <linearGradient id="ustadTurban" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#f4efe3" />
+          <stop offset="100%" stopColor="#d7cfba" />
         </linearGradient>
       </defs>
 
-      {/* Robe / shoulders */}
-      <path d="M60 92 C34 92 22 120 20 168 L20 210 L100 210 L100 168 C98 120 86 92 60 92 Z" fill="url(#ustadRobe)" stroke="rgba(16,185,129,0.28)" strokeWidth="1.5" />
-      {/* Shawl draped over shoulders */}
-      <path d="M60 96 C46 96 40 112 40 132 L52 128 C54 112 56 104 60 104 C64 104 66 112 68 128 L80 132 C80 112 74 96 60 96 Z" fill="#0e352b" opacity="0.9" />
-
+      {/* Robe */}
+      <path d="M60 96 C32 96 20 126 18 176 L18 210 L102 210 L102 176 C100 126 88 96 60 96 Z" fill="url(#ustadRobe)" stroke="rgba(16,185,129,0.28)" strokeWidth="1.5" />
+      {/* Shawl down the front */}
+      <path d="M60 98 C47 100 43 122 45 152 L57 142 C57 122 58 110 60 110 C62 110 63 122 63 142 L75 152 C77 122 73 100 60 98 Z" fill="#0e352b" opacity="0.9" />
       {/* Neck */}
-      <rect x="52" y="78" width="16" height="18" rx="6" fill="#d9ac82" />
-      {/* Face */}
-      <ellipse cx="60" cy="60" rx="22" ry="24" fill="#e8c39a" />
-      {/* Beard */}
-      <path d="M39 58 C39 84 50 96 60 96 C70 96 81 84 81 58 C81 74 70 82 60 82 C50 82 39 74 39 58 Z" fill="#e9edf0" opacity="0.92" />
-      <path d="M42 62 C46 80 53 90 60 90 C67 90 74 80 78 62 C74 72 68 76 60 76 C52 76 46 72 42 62 Z" fill="#cfd6da" opacity="0.7" />
-      {/* Eyes (calm) */}
-      <circle cx="52" cy="58" r="2.2" fill="#2a2018" />
-      <circle cx="68" cy="58" r="2.2" fill="#2a2018" />
-      {/* Gentle brow */}
-      <path d="M47 51 q5 -3 10 0" stroke="#8a6a44" strokeWidth="1.5" fill="none" strokeLinecap="round" />
-      <path d="M63 51 q5 -3 10 0" stroke="#8a6a44" strokeWidth="1.5" fill="none" strokeLinecap="round" />
-      {/* Turban / imamah */}
-      <path d="M35 44 C35 22 46 12 60 12 C74 12 85 22 85 44 C85 40 74 34 60 34 C46 34 35 40 35 44 Z" fill="#f3efe6" stroke="rgba(16,185,129,0.25)" strokeWidth="1" />
-      <path d="M35 44 C40 40 50 38 60 38 C70 38 80 40 85 44 C85 47 84 50 82 52 C74 47 66 45 60 45 C54 45 46 47 38 52 C36 50 35 47 35 44 Z" fill="#e4ddce" />
-      {/* Turban tail */}
-      <path d="M83 46 C92 50 94 64 88 74 L82 60 Z" fill="#e4ddce" />
+      <rect x="53" y="80" width="14" height="18" rx="5" fill="#0b241d" />
+
+      {/* Face - blank, no features */}
+      <ellipse cx="60" cy="55" rx="21" ry="24" fill="#0c261e" />
+      {/* Full beard framing the lower face */}
+      <path d="M39 52 C39 84 50 101 60 101 C70 101 81 84 81 52 C81 72 72 81 60 81 C48 81 39 72 39 52 Z" fill="#cfd6d2" />
+      <path d="M44 58 C46 80 53 92 60 92 C67 92 74 80 76 58 C72 70 67 74 60 74 C53 74 48 70 44 58 Z" fill="#aeb8b3" opacity="0.6" />
+
+      {/* Turban (imamah) */}
+      <path d="M33 46 C33 21 46 11 60 11 C74 11 87 21 87 46 C87 39 74 33 60 33 C46 33 33 39 33 46 Z" fill="url(#ustadTurban)" stroke="rgba(16,185,129,0.25)" strokeWidth="1" />
+      <path d="M33 46 C41 40 50 38 60 38 C70 38 79 40 87 46 C87 50 85 53 82 55 C74 50 67 48 60 48 C53 48 46 50 38 55 C35 53 33 50 33 46 Z" fill="#e7dfcc" />
+      {/* Turban tail down one side */}
+      <path d="M85 48 C95 53 97 69 89 82 L81 62 Z" fill="#e7dfcc" />
     </svg>
   );
 }

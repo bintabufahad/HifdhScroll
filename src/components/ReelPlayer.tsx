@@ -7,6 +7,11 @@ import { getAudioUrlCandidates, estimateReadDurationMs } from "@/lib/audio";
 import { resolveQuranComAudioUrl } from "@/lib/quranComAudio";
 import type { ReelSegment } from "@/lib/types";
 
+/** Converts a number to Arabic-Indic digits (e.g. 255 -> ٢٥٥). */
+function toArabicNumerals(n: number): string {
+  return String(n).replace(/\d/g, (d) => "٠١٢٣٤٥٦٧٨٩"[Number(d)]);
+}
+
 export default function ReelPlayer({
   segment,
   isActive,
@@ -185,8 +190,12 @@ export default function ReelPlayer({
               {current.arabic && (
                 <p dir="rtl" className="font-arabic text-2xl leading-[1.8] text-white drop-shadow-lg sm:text-3xl">
                   {current.arabic}
+                  <span className="text-amber-200"> ﴿{toArabicNumerals(current.numberInSurah)}﴾</span>
                 </p>
               )}
+              <p className="rounded-full bg-black/40 px-3 py-1 text-xs font-medium text-amber-100 backdrop-blur">
+                {current.surahName} · {current.surahNumber}:{current.numberInSurah}
+              </p>
               <p className="max-w-md text-sm text-white/85 drop-shadow sm:text-base">{current.translation}</p>
               {!playing && <span className="text-xs text-white/60">Paused — tap to resume</span>}
             </div>

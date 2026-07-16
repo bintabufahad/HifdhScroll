@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { extractYouTubeId } from "@/lib/youtube";
 import CameraView from "./CameraView";
-import TeacherBox from "./TeacherBox";
 import type { CameraController } from "./useCamera";
 
 export type StageMode = "lecture" | "camera" | "teacher";
@@ -102,7 +101,9 @@ export default function MainStage({
         </div>
       </div>
 
-      <div className="relative min-h-0 flex-1">
+      {/* aspect-video on mobile gives the video real height; on desktop it fills
+          the column. Without this the iframe collapsed to nothing on phones. */}
+      <div className="relative aspect-video w-full lg:aspect-auto lg:min-h-0 lg:flex-1">
         {mode === "lecture" && lectureId ? (
           <iframe
             key={lectureId}
@@ -115,7 +116,16 @@ export default function MainStage({
         ) : mode === "camera" ? (
           <CameraView camera={camera} big />
         ) : (
-          <TeacherBox big />
+          // Idle: a small teacher glyph + hint, not a big looming face.
+          <div className="flex h-full w-full flex-col items-center justify-center gap-3 rounded-xl border border-white/10 bg-gradient-to-b from-[#0f2b23] to-[#05100d] text-center">
+            <svg viewBox="0 0 100 100" className="h-12 w-12 text-emerald-400/60" fill="none">
+              <circle cx="50" cy="35" r="16" fill="currentColor" opacity="0.85" />
+              <path d="M22 88c0-16 12.5-28 28-28s28 12 28 28" fill="currentColor" opacity="0.85" />
+            </svg>
+            <p className="max-w-xs px-4 text-xs text-white/50">
+              Add a lecture link above to begin — or turn your camera on to sit in the class.
+            </p>
+          </div>
         )}
       </div>
     </div>
