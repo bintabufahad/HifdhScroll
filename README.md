@@ -13,7 +13,7 @@ The home page (`/`) is a hub with two paths: **Quran Reels** (memorization) and 
 
 ## Student of Knowledge study dashboard
 
-`/study` is a separate focus-session tool for students of knowledge (not just memorization) — any signed-in user can use it regardless of trial status, since it isn't part of the reel-generation gating at all. It's reached from the home hub (`src/components/study/StudyDashboard.tsx` orchestrates the layout).
+`/study` is a separate focus-session tool for students of knowledge (not just memorization), open to any signed-in user. It's reached from the home hub (`src/components/study/StudyDashboard.tsx` orchestrates the layout).
 
 - **Simulated class + lecture** (`src/components/study/MainStage.tsx`): the big left panel shows a placeholder teacher until a YouTube link is added (typed in, or picked from the course), then plays that lecture in its place via `youtube-nocookie.com`. Clearly labeled as a simulation ("not a real class, no one else is on this call"). When there's **no** lecture and the camera is on, the camera takes the big slot and the teacher shrinks to the small sidebar tile (`CameraView` + `TeacherBox`, camera stream owned by `useCamera`); a loaded lecture always reclaims the big slot. In the big slot the camera's controls are overlaid on the video so it stays exactly lecture-sized (no scrolling).
 - **Camera self-view + local recording** (`src/components/study/CameraView.tsx`, `useCamera.ts`): opt-in (a button, never auto-requested). Optional recording uses the MediaRecorder API and stays entirely on the device — the clip is held in memory as a blob the user can replay or download; it is never uploaded or sent anywhere.
@@ -29,33 +29,25 @@ The whole app uses one modern dark theme (near-black with emerald/gold accents a
 
 > An earlier version had a points/streak gamification bar (backed by a `record_study_session` Postgres function and extra columns in migration 004). That UI was removed; those columns/function remain in migration 004 but are unused and harmless. Migration 004 is still required — it also creates the `study_tasks` table the to-do list uses.
 
-## Waitlist and free trial
+## Accounts (free) and reviews
 
-Generating reels (`/reel`) requires an active trial. New visitors are pointed to `/waitlist` (a link on the home page, or an automatic redirect if they try `/reel` directly) to sign in with just an email (name and a suggestion/feedback note are both optional) — no password. They get a magic link by email; clicking it signs them in and starts a 14-day free trial immediately.
+Everything is free — there's no trial or paid tier. `/reel` and `/study` just require a signed-in user; visitors are pointed to `/waitlist` to sign in with just an email (name and an optional note) — no password. They get a magic link by email; clicking it signs them in.
 
-This runs on [Supabase](https://supabase.com) (Auth + Postgres) rather than a custom-built login system:
+This runs on [Supabase](https://supabase.com) (Auth + Postgres):
 
 - **Auth**: Supabase's email magic-link (OTP) sign-in. `src/lib/supabase/client.ts` / `server.ts` / `middleware.ts` are the standard `@supabase/ssr` client setup for the Next.js App Router.
-- **Trial data**: a `profiles` table (see `supabase/migrations/001_profiles_and_trial.sql`) with `trial_starts_at`/`trial_ends_at`, auto-created by a database trigger the moment someone signs up, copying the name/suggestion they entered from their auth metadata. Protected by Row Level Security so a user can only ever read their own row.
-- **Gating**: `src/proxy.ts` refreshes the Supabase session and checks `trial_ends_at` on every `/reel` and `/feedback` request. No signed-in user → `/waitlist` (`from=signin`, a neutral "sign in" prompt — not shown as an expired trial). Trial still active → `/reel` works and `/feedback` bounces to `/`. Trial expired and feedback not yet given → `/reel` redirects to `/feedback`. Trial expired and feedback already given (the one-time 30-day bonus already used) → back to `/waitlist` (`from=trial-ended`, the "your trial has ended" message). These two waitlist reasons are deliberately distinct so a brand-new visitor is never told their (nonexistent) trial "has ended."
-- **Magic-link callback**: `src/app/auth/callback/route.ts` exchanges the emailed code for a session, per Supabase's documented PKCE flow.
-- There's no paid tier or renewal flow — once the 14-day trial and the one-time 30-day feedback bonus are both used up, `/reel` redirects back to the waitlist page.
+- **Gating**: `src/proxy.ts` refreshes the Supabase session and, for `/reel` and `/study`, redirects to `/waitlist` only if there's no signed-in user. No trial checks. `/feedback` is fully public.
+- **Magic-link callback**: `src/app/auth/callback/route.ts` verifies the emailed link (token_hash or PKCE code) and writes the session cookies onto its redirect response; it derives the public origin from the forwarded host so redirects work behind Render's proxy.
+- The `profiles` table and trial columns (migrations 001–006) still exist but are no longer used for gating — they're harmless.
 
-### Post-trial feedback → 30 more days
+### Reviews (`/feedback`)
 
-When the 14-day trial expires, `/reel` redirects to `/feedback` (see `src/components/FeedbackForm.tsx`) instead of straight back to the waitlist. The page:
-
-- Explains, in a respectful Islamic tone, that the trial has ended and thanks the user for their time.
-- Shows two verses fetched live through the same AlQuran Cloud integration used for reels — An-Nahl 16:125 and Fussilat 41:33 (`src/components/DawahVerses.tsx`) — both about the virtue of calling others to the Qur'an, framing a review as an invitation that might turn someone's Instagram scrolling into Qur'an reading instead.
-- Asks for a star rating, a short review, and — separately — what features or value would make the app worth paying for, since that's genuinely useful product feedback.
-- On submit, calls the `submit_feedback_and_extend_trial` Postgres function (see `supabase/migrations/002_feedback_and_trial_extension.sql`), which records the feedback and pushes `trial_ends_at` out by 30 days, then redirects home.
-
-This only ever fires once per account: the function refuses to run again if `feedback_submitted_at` is already set, and direct client updates to `trial_ends_at` are no longer possible at all — migration 002 drops the old "users can update their own profile" policy (which would have let anyone extend their own trial from devtools) so the trial can now only change through this server-side function.
+`/feedback` is a public reviews wall (`src/components/ReviewsPage.tsx`). Anyone can read the reviews; a signed-in user can post one (star rating + text) and delete their own. Reviews are stored per-user in a `reviews` table (`supabase/migrations/007_reviews.sql`) with public-read RLS, so they're durable and never disappear. It's linked from the home page.
 
 ### Supabase setup (one-time)
 
 1. Create a free project at [supabase.com](https://supabase.com).
-2. In the SQL Editor, run the migrations in `supabase/migrations/` in order (001 through 005): profiles/trial, the post-trial feedback flow, the donation-field removal, the Study Session dashboard's task table, then the structured-course table.
+2. In the SQL Editor, run the migrations in `supabase/migrations/` in order (001 through 007). The later ones add the study to-do table, the structured-course table, a resilient signup trigger, and the reviews table. (The trial/feedback-extension pieces in 001–002 are unused now but harmless.)
 3. In **Project Settings → API**, copy the **Project URL** and **anon/public key**.
 4. Confirm **Authentication → Providers → Email** has OTP/magic-link enabled (on by default).
 5. Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` to those values, locally and/or on Render (see below).
@@ -73,7 +65,7 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:3000. The waitlist/trial gating needs Supabase credentials (see [Supabase setup](#supabase-setup-one-time) above); set these locally in `.env.local` (gitignored):
+Open http://localhost:3000. Sign-in, the study dashboard, and reviews need Supabase credentials (see [Supabase setup](#supabase-setup-one-time) above); set these locally in `.env.local` (gitignored):
 
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co

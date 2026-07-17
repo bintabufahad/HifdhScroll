@@ -54,12 +54,16 @@ export default function Home() {
         </Link>
       </div>
 
-      <p className="animate-rise-in mt-6 text-xs text-white/45 sm:mt-8 sm:text-sm">
-        New here?{" "}
-        <Link href="/waitlist" className="text-emerald-300 underline underline-offset-2 hover:text-emerald-200">
-          Join the waitlist
-        </Link>{" "}
-        for a 14-day free trial.
+      <p className="animate-rise-in mt-6 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-white/45 sm:mt-8 sm:text-sm">
+        <span>
+          New here?{" "}
+          <Link href="/waitlist" className="text-emerald-300 underline underline-offset-2 hover:text-emerald-200">
+            Sign in free
+          </Link>
+        </span>
+        <Link href="/feedback" className="text-emerald-300 underline underline-offset-2 hover:text-emerald-200">
+          Reviews
+        </Link>
       </p>
     </div>
   );

@@ -27,7 +27,6 @@ function friendlyError(message: string): string {
 
 export default function WaitlistForm() {
   const searchParams = useSearchParams();
-  const cameFromExpiredTrial = searchParams.get("from") === "trial-ended";
   const cameFromAuthError = searchParams.get("from") === "auth-error";
 
   const [name, setName] = useState("");
@@ -96,8 +95,8 @@ export default function WaitlistForm() {
       <div className="glass mx-auto flex w-full max-w-md flex-col items-center gap-4 rounded-2xl p-6 text-center">
         <h2 className="font-display text-2xl font-bold text-white">Check your email</h2>
         <p className="text-white/70">
-          We sent a sign-in link to <strong className="text-emerald-300">{email}</strong>. Open it to activate your
-          14-day free trial.
+          We sent a sign-in link to <strong className="text-emerald-300">{email}</strong>. Open it to sign in — it&apos;s
+          free.
         </p>
       </div>
     );
@@ -106,15 +105,10 @@ export default function WaitlistForm() {
   return (
     <form onSubmit={handleSubmit} className="glass mx-auto flex w-full max-w-md flex-col gap-4 rounded-2xl p-6">
       <div className="text-center">
-        <h1 className="font-display text-3xl font-bold text-white">Join the waitlist</h1>
-        <p className="mt-2 text-white/60">Sign up for instant access: a 14-day free trial of Rusookh.</p>
+        <h1 className="font-display text-3xl font-bold text-white">Sign in to Rusookh</h1>
+        <p className="mt-2 text-white/60">Enter your email — we&apos;ll send a magic link. It&apos;s completely free.</p>
       </div>
 
-      {cameFromExpiredTrial && (
-        <p className="rounded-lg border border-emerald-400/25 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
-          Your free trial has ended. Join below to hear about what&apos;s next.
-        </p>
-      )}
       {cameFromAuthError && (
         <p className="rounded-lg border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
           That sign-in link didn&apos;t work (it may have expired). Please request a new one below.

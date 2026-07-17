@@ -1,51 +1,19 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 
+/**
+ * Everything is free now - there's no trial. /reel and /study just require a
+ * signed-in user; if there's none, send them to the sign-in page and remember
+ * where they were headed. /feedback (the reviews page) is public.
+ */
 export async function proxy(request: NextRequest) {
-  const { supabaseResponse, user, supabase } = await updateSession(request);
-  const path = request.nextUrl.pathname;
+  const { supabaseResponse, user } = await updateSession(request);
 
   if (!user) {
-    // Remember where they were headed so sign-in returns them there.
-    return redirectTo(request, "/waitlist", "signin", path + request.nextUrl.search);
+    return redirectTo(request, "/waitlist", "signin", request.nextUrl.pathname + request.nextUrl.search);
   }
 
-  // Study Session dashboard is available to any signed-in user regardless
-  // of trial status - it isn't part of the reel-generation trial/feedback
-  // gate at all.
-  if (path.startsWith("/study")) {
-    return supabaseResponse;
-  }
-
-  const { data: profile, error: profileError } = await supabase
-    .from("profiles")
-    .select("trial_ends_at, feedback_submitted_at")
-    .eq("id", user.id)
-    .single();
-
-  // If the profile read failed for any reason other than "no such row"
-  // (PGRST116) - e.g. a transient PostgREST/network hiccup - we can't tell
-  // whether the trial is active, so fail open and let the request through
-  // rather than wrongly bouncing a signed-in user off /reel.
-  if (profileError && profileError.code !== "PGRST116") {
-    return supabaseResponse;
-  }
-
-  const trialActive = !!profile?.trial_ends_at && new Date(profile.trial_ends_at).getTime() > Date.now();
-  const feedbackDone = !!profile?.feedback_submitted_at;
-
-  if (path.startsWith("/feedback")) {
-    // The one-time feedback-for-30-days offer only makes sense once the
-    // original trial has actually run out, and only once per account.
-    if (trialActive) return NextResponse.redirect(new URL("/", request.url));
-    if (feedbackDone) return redirectTo(request, "/waitlist", "trial-ended");
-    return supabaseResponse;
-  }
-
-  // /reel
-  if (trialActive) return supabaseResponse;
-  if (!feedbackDone) return redirectTo(request, "/feedback", "trial-ended");
-  return redirectTo(request, "/waitlist", "trial-ended");
+  return supabaseResponse;
 }
 
 function redirectTo(request: NextRequest, pathname: string, from: string, next?: string) {
@@ -60,5 +28,5 @@ function redirectTo(request: NextRequest, pathname: string, from: string, next?:
 }
 
 export const config = {
-  matcher: ["/reel/:path*", "/feedback/:path*", "/study/:path*"],
+  matcher: ["/reel/:path*", "/study/:path*"],
 };

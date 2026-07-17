@@ -58,6 +58,15 @@ export interface StudyTask {
   completed_at: string | null;
 }
 
+export interface Review {
+  id: string;
+  author_name: string | null;
+  rating: number | null;
+  body: string;
+  created_at: string;
+  user_id: string;
+}
+
 export type CourseItemType = "youtube" | "pdf";
 
 export interface CourseItem {
