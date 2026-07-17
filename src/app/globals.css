@@ -149,14 +149,28 @@ body {
    top (full width), the lecture big below it, then live camera + planner in a
    row. Landscape / desktop: lecture fills the left, with timer/camera/planner
    stacked in a right column. No swapping - every region has a fixed home. */
+/* Phone: single column so the planner (to-do) is full width and readable. */
 .study-grid {
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: auto minmax(0, 1.15fr) minmax(0, 0.9fr);
+  grid-template-columns: 1fr;
+  grid-template-rows: auto minmax(0, 1.1fr) minmax(0, 0.55fr) minmax(0, 1.35fr);
   grid-template-areas:
-    "timer timer"
-    "lecture lecture"
-    "camera planner";
+    "timer"
+    "lecture"
+    "camera"
+    "planner";
 }
+/* Tablet portrait (and up): timer on top, big lecture, camera + planner row. */
+@media (min-width: 640px) {
+  .study-grid {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto minmax(0, 1.15fr) minmax(0, 0.9fr);
+    grid-template-areas:
+      "timer timer"
+      "lecture lecture"
+      "camera planner";
+  }
+}
+/* Landscape / desktop: lecture fills the left, sidebar on the right. */
 @media (min-width: 1024px) {
   .study-grid {
     grid-template-columns: minmax(0, 1fr) 23rem;
