@@ -71,23 +71,15 @@ export default function StudyDashboard({
         </h1>
       </header>
 
-      <main className="mx-auto grid w-full max-w-[1600px] flex-1 grid-cols-1 gap-3 sm:gap-4 lg:h-[calc(100dvh-6rem)] lg:grid-cols-[minmax(0,1fr)_23rem]">
-        <div className="animate-rise-in min-h-0">
-          <MainStage
-            mode={mode}
-            lectureId={lectureId}
-            camera={camera}
-            onSetLecture={setLectureId}
-            onClear={() => setLectureId(null)}
-          />
-        </div>
-
-        <aside className="flex min-h-0 flex-col gap-3 sm:gap-4">
-          {/* Secondary tile: whichever of camera/teacher isn't in the big slot.
-              Compact (controls overlaid), full-width to match the other cards. */}
-          <div className="animate-rise-in glass shrink-0 rounded-2xl p-2 sm:p-3">
-            {mode === "camera" ? <TeacherBox /> : <CameraView camera={camera} />}
-          </div>
+      {/* Two columns from sm up (tablet portrait + landscape + desktop) so it
+          never becomes a tall scroll: STUDY (timer + to-do) on one side, the
+          VIDEO (big lecture/camera) with the small secondary tile on the other.
+          Phone stacks with the video on top. Order flips so landscape/desktop
+          keep the video on the left and study on the right, while tablet
+          portrait puts study on the left and the video on the right. */}
+      <main className="mx-auto flex w-full max-w-[1600px] flex-1 flex-col gap-3 sm:h-[calc(100dvh-6rem)] sm:flex-row sm:gap-4">
+        {/* Study column */}
+        <aside className="flex min-h-0 flex-col gap-3 sm:order-1 sm:basis-[42%] sm:gap-4 lg:order-2 lg:basis-[23rem] lg:shrink-0">
           <div className="animate-rise-in shrink-0">
             <StudyTimer onSessionComplete={handleSessionComplete} />
           </div>
@@ -95,6 +87,23 @@ export default function StudyDashboard({
             <TaskList tasks={tasks} onTasksChange={setTasks} fill />
           </div>
         </aside>
+
+        {/* Video column */}
+        <div className="order-first flex min-h-0 min-w-0 flex-col gap-3 sm:order-2 sm:flex-1 sm:gap-4 lg:order-1">
+          <div className="animate-rise-in min-h-0 sm:flex-1">
+            <MainStage
+              mode={mode}
+              lectureId={lectureId}
+              camera={camera}
+              onSetLecture={setLectureId}
+              onClear={() => setLectureId(null)}
+            />
+          </div>
+          {/* Secondary tile: whichever of camera/teacher isn't in the big slot. */}
+          <div className="animate-rise-in glass shrink-0 rounded-2xl p-2 sm:p-3">
+            {mode === "camera" ? <TeacherBox /> : <CameraView camera={camera} />}
+          </div>
+        </div>
       </main>
     </div>
   );

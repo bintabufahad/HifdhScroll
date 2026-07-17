@@ -101,9 +101,9 @@ export default function MainStage({
         </div>
       </div>
 
-      {/* aspect-video on mobile gives the video real height; on desktop it fills
-          the column. Without this the iframe collapsed to nothing on phones. */}
-      <div className="relative aspect-video w-full lg:aspect-auto lg:min-h-0 lg:flex-1">
+      {/* aspect-video on phones gives the video real height; from tablet portrait
+          up it fills the column. Without this the iframe collapsed to nothing. */}
+      <div className="relative aspect-video w-full sm:aspect-auto sm:min-h-0 sm:flex-1">
         {mode === "lecture" && lectureId ? (
           <iframe
             key={lectureId}
