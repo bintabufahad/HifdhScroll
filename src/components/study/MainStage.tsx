@@ -43,18 +43,18 @@ export default function MainStage({
   }
 
   return (
-    <div className="glass flex h-full flex-col rounded-2xl p-4">
-      <div className="mb-3 flex shrink-0 items-center justify-between gap-2">
-        <p className="truncate text-xs font-medium uppercase tracking-widest text-emerald-200/70">
-          {mode === "lecture" ? "Lecture" : "Simulated study call — not a real class"}
+    <div className="glass flex h-full flex-col rounded-2xl p-2 sm:p-3">
+      <div className="mb-2 flex shrink-0 items-center justify-between gap-1.5">
+        <p className="truncate text-[10px] font-medium uppercase tracking-wide text-emerald-200/70 sm:text-xs sm:tracking-widest">
+          {mode === "lecture" ? "Lecture" : "Simulated — not a real class"}
         </p>
         <div className="relative flex shrink-0 gap-1">
           <button
             type="button"
             onClick={() => setShowInput((v) => !v)}
-            className="rounded-full bg-emerald-500/90 px-3 py-1 text-xs font-medium text-emerald-950 transition hover:bg-emerald-400"
+            className="rounded-full bg-emerald-500/90 px-2 py-1 text-[10px] font-medium text-emerald-950 transition hover:bg-emerald-400 sm:px-3 sm:text-xs"
           >
-            {lectureId ? "Change lecture" : "▶ Add lecture link"}
+            {lectureId ? "Change" : "▶ Add lecture"}
           </button>
           {lectureId && (
             <button
@@ -101,9 +101,10 @@ export default function MainStage({
         </div>
       </div>
 
-      {/* aspect-video on phones gives the video real height; from tablet portrait
-          up it fills the column. Without this the iframe collapsed to nothing. */}
-      <div className="relative aspect-video w-full sm:aspect-auto sm:min-h-0 sm:flex-1">
+      {/* Keep the video a proper wide 16:9 shape on phone & tablet portrait
+          (so it isn't stretched tall); only let it fill the column height on
+          landscape/desktop, where the column is short and wide. */}
+      <div className="relative aspect-video w-full lg:aspect-auto lg:min-h-0 lg:flex-1">
         {mode === "lecture" && lectureId ? (
           <iframe
             key={lectureId}

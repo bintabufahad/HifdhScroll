@@ -46,12 +46,12 @@ export default function SetupForm() {
     "w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2.5 text-sm text-white outline-none placeholder:text-white/40 focus:ring-2 focus:ring-emerald-500/50 sm:text-base";
 
   return (
-    <div className="mx-auto flex w-full max-w-xl flex-col gap-5 sm:gap-8">
-      <section className="glass rounded-2xl p-4 sm:p-5">
-        <h2 className="mb-3 font-display text-sm font-semibold uppercase tracking-widest text-emerald-200/80">
+    <div className="mx-auto flex w-full max-w-xl flex-col gap-3 sm:gap-5">
+      <section className="glass rounded-2xl p-3 sm:p-5">
+        <h2 className="mb-2 font-display text-sm font-semibold uppercase tracking-widest text-emerald-200/80">
           Select passage
         </h2>
-        <div className="mb-4 flex gap-2">
+        <div className="mb-3 flex gap-2">
           {(["surah", "page", "range"] as ReelMode[]).map((m) => (
             <button
               key={m}
@@ -131,10 +131,12 @@ export default function SetupForm() {
         )}
       </section>
 
-      <section className="glass rounded-2xl p-4 sm:p-5">
-        <div className="mb-3 flex items-center justify-between gap-2">
-          <h2 className="font-display text-sm font-semibold uppercase tracking-widest text-emerald-200/80">Reciters</h2>
-          <span className="text-right text-xs text-white/50">{selectedQaris.length} selected</span>
+      <section className="glass rounded-2xl p-3 sm:p-5">
+        <div className="mb-2 flex items-baseline justify-between gap-2">
+          <h2 className="font-display text-sm font-semibold uppercase tracking-widest text-emerald-200/80">
+            Reciters <span className="font-sans text-xs font-normal normal-case tracking-normal text-white/35">(select your reciters)</span>
+          </h2>
+          <span className="shrink-0 text-right text-xs text-white/50">{selectedQaris.length} selected</span>
         </div>
         <div className="flex flex-wrap gap-1.5">
           {qaris.map((q) => (
@@ -151,7 +153,7 @@ export default function SetupForm() {
 
       <button
         onClick={generate}
-        className="lift w-full rounded-full bg-emerald-500 py-3 font-display text-base font-semibold tracking-wide text-emerald-950 transition hover:bg-emerald-400 sm:text-lg"
+        className="lift w-full rounded-full bg-emerald-500 py-2.5 font-display text-base font-semibold tracking-wide text-emerald-950 transition hover:bg-emerald-400 sm:py-3 sm:text-lg"
       >
         Generate Reels
       </button>
@@ -174,7 +176,7 @@ function QariCheckbox({
     <button
       onClick={() => onToggle(id)}
       aria-pressed={checked}
-      className={`rounded-full border px-2.5 py-1 text-xs transition ${
+      className={`rounded-full border px-2 py-0.5 text-[11px] transition ${
         checked
           ? "border-emerald-400 bg-emerald-500 text-emerald-950"
           : "border-white/15 bg-white/5 text-white/70 hover:bg-white/10"
