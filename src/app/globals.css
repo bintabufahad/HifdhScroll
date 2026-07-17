@@ -145,6 +145,41 @@ body {
   animation: floatSoft 5s ease-in-out infinite;
 }
 
+/* Student-of-Knowledge fixed-region layout. Phone / tablet portrait: timer on
+   top (full width), the lecture big below it, then live camera + planner in a
+   row. Landscape / desktop: lecture fills the left, with timer/camera/planner
+   stacked in a right column. No swapping - every region has a fixed home. */
+.study-grid {
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto minmax(0, 1.15fr) minmax(0, 0.9fr);
+  grid-template-areas:
+    "timer timer"
+    "lecture lecture"
+    "camera planner";
+}
+@media (min-width: 1024px) {
+  .study-grid {
+    grid-template-columns: minmax(0, 1fr) 23rem;
+    grid-template-rows: auto minmax(0, 0.85fr) minmax(0, 1.15fr);
+    grid-template-areas:
+      "lecture timer"
+      "lecture camera"
+      "lecture planner";
+  }
+}
+.area-timer {
+  grid-area: timer;
+}
+.area-lecture {
+  grid-area: lecture;
+}
+.area-camera {
+  grid-area: camera;
+}
+.area-planner {
+  grid-area: planner;
+}
+
 /* The faceless "Ustad" peeking in from the edge to keep you accountable. */
 .ustad-peek {
   transition: transform 0.9s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.9s ease;

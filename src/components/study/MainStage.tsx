@@ -2,26 +2,18 @@
 
 import { useState } from "react";
 import { extractYouTubeId } from "@/lib/youtube";
-import CameraView from "./CameraView";
-import type { CameraController } from "./useCamera";
-
-export type StageMode = "lecture" | "camera" | "teacher";
 
 /**
- * The big left panel. It shows the lecture when one is loaded; otherwise, if the
- * camera is on, it shows the camera large (in the lecture's place); otherwise the
- * placeholder teacher. The "add lecture link" control is always available here.
+ * The lecture region. Shows the YouTube lecture when one is loaded, otherwise a
+ * "paste a lecture link" prompt. This is its own fixed spot - it never swaps
+ * with the camera. It fills its grid cell.
  */
 export default function MainStage({
-  mode,
   lectureId,
-  camera,
   onSetLecture,
   onClear,
 }: {
-  mode: StageMode;
   lectureId: string | null;
-  camera: CameraController;
   onSetLecture: (id: string) => void;
   onClear: () => void;
 }) {
@@ -46,7 +38,7 @@ export default function MainStage({
     <div className="glass flex h-full flex-col rounded-2xl p-2 sm:p-3">
       <div className="mb-2 flex shrink-0 items-center justify-between gap-1.5">
         <p className="truncate text-[10px] font-medium uppercase tracking-wide text-emerald-200/70 sm:text-xs sm:tracking-widest">
-          {mode === "lecture" ? "Lecture" : "Simulated — not a real class"}
+          Lecture
         </p>
         <div className="relative flex shrink-0 gap-1">
           <button
@@ -60,7 +52,7 @@ export default function MainStage({
             <button
               type="button"
               onClick={onClear}
-              className="rounded-full bg-white/10 px-2 py-1 text-xs font-medium text-white/80 transition hover:bg-white/20"
+              className="rounded-full bg-white/10 px-2 py-1 text-[10px] font-medium text-white/80 transition hover:bg-white/20 sm:text-xs"
               aria-label="Remove lecture"
             >
               ✕
@@ -101,32 +93,27 @@ export default function MainStage({
         </div>
       </div>
 
-      {/* Keep the video a proper wide 16:9 shape on phone & tablet portrait
-          (so it isn't stretched tall); only let it fill the column height on
-          landscape/desktop, where the column is short and wide. */}
-      <div className="relative aspect-video w-full lg:aspect-auto lg:min-h-0 lg:flex-1">
-        {mode === "lecture" && lectureId ? (
+      <div className="relative min-h-0 flex-1 overflow-hidden rounded-xl border border-white/10 bg-black/50">
+        {lectureId ? (
           <iframe
             key={lectureId}
             src={`https://www.youtube-nocookie.com/embed/${lectureId}?autoplay=1`}
             title="Lecture"
-            className="h-full w-full rounded-xl border border-white/10"
+            className="h-full w-full"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
           />
-        ) : mode === "camera" ? (
-          <CameraView camera={camera} big />
         ) : (
-          // Idle: a small teacher glyph + hint, not a big looming face.
-          <div className="flex h-full w-full flex-col items-center justify-center gap-3 rounded-xl border border-white/10 bg-gradient-to-b from-[#0f2b23] to-[#05100d] text-center">
-            <svg viewBox="0 0 100 100" className="h-12 w-12 text-emerald-400/60" fill="none">
-              <circle cx="50" cy="35" r="16" fill="currentColor" opacity="0.85" />
-              <path d="M22 88c0-16 12.5-28 28-28s28 12 28 28" fill="currentColor" opacity="0.85" />
-            </svg>
-            <p className="max-w-xs px-4 text-xs text-white/50">
-              Add a lecture link above to begin — or turn your camera on to sit in the class.
-            </p>
-          </div>
+          <button
+            type="button"
+            onClick={() => setShowInput(true)}
+            className="flex h-full w-full flex-col items-center justify-center gap-2 px-4 text-center"
+          >
+            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-500/15 text-xl text-emerald-300">
+              ▶
+            </span>
+            <span className="text-xs text-white/50">Tap to paste a YouTube lecture link and play it here</span>
+          </button>
         )}
       </div>
     </div>

@@ -2,9 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import MainStage, { type StageMode } from "./MainStage";
+import MainStage from "./MainStage";
 import CameraView from "./CameraView";
-import TeacherBox from "./TeacherBox";
 import StudyTimer from "./StudyTimer";
 import TaskList from "./TaskList";
 import CoursePlaylist from "./CoursePlaylist";
@@ -25,10 +24,6 @@ export default function StudyDashboard({
   const [courseOpen, setCourseOpen] = useState(false);
   const camera = useCamera();
 
-  // Big slot = lecture if there is one, else the camera (when on), else the
-  // placeholder teacher. Whatever isn't in the big slot becomes the small tile.
-  const mode: StageMode = lectureId ? "lecture" : camera.cameraOn ? "camera" : "teacher";
-
   function handleSessionComplete(seconds: number) {
     const minutes = Math.max(1, Math.round(seconds / 60));
     setToast(`Focus session complete — ${minutes} min. Baarak Allahu feek!`);
@@ -36,9 +31,10 @@ export default function StudyDashboard({
   }
 
   return (
-    // Fixed to the viewport height with overflow hidden: the dashboard never
-    // scrolls the page - the to-do list scrolls inside its own card instead.
-    <div className="bg-app-dark relative flex h-[100dvh] flex-col overflow-hidden px-3 py-2 sm:px-5 sm:py-3">
+    // Pinned to the viewport height with overflow hidden: the page never
+    // scrolls. Every region has a fixed home (no camera/lecture swapping):
+    // timer on top, big lecture, live camera, and the planner (to-do).
+    <div className="bg-app-dark relative flex h-[100dvh] flex-col overflow-hidden px-2 py-2 sm:px-4 sm:py-3">
       <CoursePlaylist
         open={courseOpen}
         onToggle={() => setCourseOpen((v) => !v)}
@@ -71,37 +67,25 @@ export default function StudyDashboard({
         </h1>
       </header>
 
-      {/* Two columns at every size: STUDY (timer + to-do) and VIDEO (a compact
-          lecture/camera + the small secondary tile). On phone/tablet-portrait
-          study is on the left and the smaller video on the right; landscape and
-          desktop flip so the big video is on the left and study on the right. */}
-      <main className="mx-auto flex min-h-0 w-full max-w-[1600px] flex-1 flex-row gap-2 sm:gap-4">
-        {/* Study column */}
-        <aside className="flex min-h-0 min-w-0 basis-[56%] flex-col gap-2 sm:basis-[55%] sm:gap-3 lg:order-2 lg:basis-[22rem] lg:shrink-0">
-          <div className="animate-rise-in shrink-0">
-            <StudyTimer onSessionComplete={handleSessionComplete} />
-          </div>
-          <div className="animate-rise-in flex min-h-0 flex-1 flex-col">
-            <TaskList tasks={tasks} onTasksChange={setTasks} fill />
-          </div>
-        </aside>
+      <main className="study-grid mx-auto grid min-h-0 w-full max-w-[1600px] flex-1 gap-2 sm:gap-3">
+        {/* Timer (purple) */}
+        <div className="area-timer min-w-0">
+          <StudyTimer onSessionComplete={handleSessionComplete} />
+        </div>
 
-        {/* Video column */}
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col justify-center gap-2 sm:gap-3 lg:order-1 lg:justify-start">
-          <div className="animate-rise-in min-h-0 lg:flex-1">
-            <MainStage
-              mode={mode}
-              lectureId={lectureId}
-              camera={camera}
-              onSetLecture={setLectureId}
-              onClear={() => setLectureId(null)}
-            />
-          </div>
-          {/* Secondary tile: whichever of camera/teacher isn't in the big slot -
-              kept clearly small and to the right. */}
-          <div className="animate-rise-in glass w-1/2 self-end rounded-2xl p-1.5 sm:p-2 lg:w-3/5">
-            {mode === "camera" ? <TeacherBox /> : <CameraView camera={camera} />}
-          </div>
+        {/* Lecture (red) */}
+        <div className="area-lecture min-h-0 min-w-0">
+          <MainStage lectureId={lectureId} onSetLecture={setLectureId} onClear={() => setLectureId(null)} />
+        </div>
+
+        {/* Live camera (blue) */}
+        <div className="area-camera glass flex min-h-0 min-w-0 flex-col rounded-2xl p-1.5 sm:p-2">
+          <CameraView camera={camera} big />
+        </div>
+
+        {/* Planner / to-do (orange) */}
+        <div className="area-planner flex min-h-0 min-w-0 flex-col">
+          <TaskList tasks={tasks} onTasksChange={setTasks} fill />
         </div>
       </main>
     </div>
