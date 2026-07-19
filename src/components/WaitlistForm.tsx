@@ -34,7 +34,7 @@ export default function WaitlistForm() {
   const cameFromAuthError = searchParams.get("from") === "auth-error";
 
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(searchParams.get("email") ?? "");
   const [suggestion, setSuggestion] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");

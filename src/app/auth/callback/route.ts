@@ -27,6 +27,7 @@ export async function GET(request: Request) {
   const type = searchParams.get("type") as EmailOtpType | null;
   const code = searchParams.get("code");
   const next = safeNext(searchParams.get("next"));
+  const email = searchParams.get("email");
 
   const response = NextResponse.redirect(`${origin}${next}`);
 
@@ -51,7 +52,7 @@ export async function GET(request: Request) {
     // hard-codes it), try the URL's type first, then the two common ones. This
     // is what makes a link opened in a *different* browser (Instagram -> Chrome)
     // still sign in: token_hash verification needs no code-verifier cookie.
-    const types = [...new Set([type, "email", "signup"].filter(Boolean))] as EmailOtpType[];
+    const types = [...new Set([type, "email", "magiclink", "signup"].filter(Boolean))] as EmailOtpType[];
     for (const t of types) {
       const { error } = await supabase.auth.verifyOtp({ type: t, token_hash });
       if (!error) return response;
@@ -69,7 +70,12 @@ export async function GET(request: Request) {
     console.error("auth/callback: no token_hash or code in", request.url);
   }
 
-  return NextResponse.redirect(`${origin}/waitlist?from=auth-error`);
+  // Carry the email back so the sign-in form is pre-filled and a fresh link can
+  // be requested from *this* browser (where it will succeed) in one tap.
+  const errorUrl = new URL(`${origin}/waitlist`);
+  errorUrl.searchParams.set("from", "auth-error");
+  if (email) errorUrl.searchParams.set("email", email);
+  return NextResponse.redirect(errorUrl.toString());
 }
 
 /** The public origin (scheme + host) from Render's forwarded headers, not the internal bind address. */
