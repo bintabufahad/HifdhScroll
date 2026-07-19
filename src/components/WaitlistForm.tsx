@@ -18,7 +18,7 @@ function friendlyError(message: string): string {
     return "Please wait a few seconds, then try again — the server limits how often codes can be sent.";
   }
   if (m.toLowerCase().includes("expired") || m.toLowerCase().includes("invalid")) {
-    return "That code is wrong or expired. Check the newest email and re-enter the 6-digit code.";
+    return "That code is wrong or expired. Check the newest email and re-enter the code.";
   }
   if (m.toLowerCase().includes("sending") || m.toLowerCase().includes("smtp")) {
     return "We couldn't send the email right now. Please try again in a moment.";
@@ -107,13 +107,14 @@ export default function WaitlistForm() {
     setError("");
     try {
       const supabase = createClient();
-      // The same 6-digit code is delivered as a "signup" OTP for brand-new
-      // accounts and an "email" (magic-link) OTP for returning ones. We don't
-      // know which the person is, so try both types before deciding the code
-      // is bad - otherwise a perfectly correct code "always" fails for whichever
-      // group we didn't guess.
+      // Depending on whether the person is brand-new vs. returning, and on the
+      // project's email settings, the very same code is minted as a "signup",
+      // "magiclink", or "email" OTP. A wrong-type verify doesn't consume the
+      // code, so we can safely try each type until one works instead of
+      // guessing - otherwise a perfectly correct code "always" fails for
+      // whichever type we didn't try.
       let verifyError = null;
-      for (const type of ["email", "signup"] as const) {
+      for (const type of ["email", "magiclink", "signup"] as const) {
         const { error } = await supabase.auth.verifyOtp({ email, token, type });
         if (!error) {
           verifyError = null;
