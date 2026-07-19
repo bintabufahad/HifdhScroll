@@ -45,10 +45,18 @@ export async function GET(request: Request) {
     }
   );
 
-  if (token_hash && type) {
-    const { error } = await supabase.auth.verifyOtp({ type, token_hash });
-    if (!error) return response;
-    console.error("auth/callback verifyOtp failed:", error.message);
+  if (token_hash) {
+    // A signup link and a returning-user magic link carry different OTP types.
+    // Rather than trust the `type` in the URL (which can be wrong if a template
+    // hard-codes it), try the URL's type first, then the two common ones. This
+    // is what makes a link opened in a *different* browser (Instagram -> Chrome)
+    // still sign in: token_hash verification needs no code-verifier cookie.
+    const types = [...new Set([type, "email", "signup"].filter(Boolean))] as EmailOtpType[];
+    for (const t of types) {
+      const { error } = await supabase.auth.verifyOtp({ type: t, token_hash });
+      if (!error) return response;
+      console.error(`auth/callback verifyOtp (${t}) failed:`, error.message);
+    }
   }
 
   if (code) {
