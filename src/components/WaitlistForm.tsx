@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 function isNetworkError(message: string): boolean {
@@ -12,20 +12,22 @@ function isNetworkError(message: string): boolean {
 function friendlyError(message: string): string {
   const m = (message || "").trim();
   if (isNetworkError(m)) {
-    return "Couldn't reach the server. Check your internet connection and try again. If it keeps failing, the app's database may be waking up — wait a minute and retry.";
+    return "Couldn't reach the server. Check your connection and try again in a moment.";
   }
-  if (m.toLowerCase().includes("rate limit")) {
-    return "Too many attempts for now. Please wait a little while, then request the link again.";
+  if (m.toLowerCase().includes("rate limit") || m.toLowerCase().includes("after")) {
+    return "Please wait a few seconds, then try again — the server limits how often codes can be sent.";
   }
-  // Opaque/empty server errors (e.g. "{}", "[object Object]", or a database
-  // error during signup) - give something actionable instead of the raw blob.
+  if (m.toLowerCase().includes("expired") || m.toLowerCase().includes("invalid")) {
+    return "That code is wrong or expired. Check the newest email and re-enter the 6-digit code.";
+  }
   if (m === "" || m === "{}" || m === "[object Object]" || m.toLowerCase().includes("database error")) {
-    return "The server couldn't complete sign-in right now — this is usually a temporary issue on the app's side. Please wait a minute and try again.";
+    return "The server had a hiccup — please wait a moment and try again.";
   }
   return m;
 }
 
 export default function WaitlistForm() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const cameFromAuthError = searchParams.get("from") === "auth-error";
 
@@ -36,15 +38,16 @@ export default function WaitlistForm() {
   const [error, setError] = useState("");
   const [sent, setSent] = useState(false);
 
+  // Code-verification step (works in any browser - the key fix for links opened
+  // from Instagram's in-app browser vs. the email opening in Chrome).
+  const [code, setCode] = useState("");
+  const [verifying, setVerifying] = useState(false);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSubmitting(true);
     setError("");
 
-    // Keep the redirect URL free of query params: Supabase appends its own
-    // auth code to this URL, and an existing query string can collide with it
-    // and break the code exchange. The user lands on the home hub after
-    // sign-in, which is fine.
     const options = {
       email,
       options: {
@@ -56,18 +59,15 @@ export default function WaitlistForm() {
       },
     };
 
-    // A transient "Failed to fetch" (flaky mobile network, or the free Supabase
-    // project waking up) often clears on a second try, so retry network errors
-    // once before surfacing the error.
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
         const supabase = createClient();
         const { error: signInError } = await supabase.auth.signInWithOtp(options);
         if (!signInError) {
           setSent(true);
+          setSubmitting(false);
           return;
         }
-        // Log the full error so the real cause is visible in the browser console.
         console.error("Sign-in error:", signInError);
         if (isNetworkError(signInError.message) && attempt === 0) {
           await new Promise((r) => setTimeout(r, 1200));
@@ -90,15 +90,78 @@ export default function WaitlistForm() {
     }
   }
 
+  async function verifyCode(e: React.FormEvent) {
+    e.preventDefault();
+    const token = code.replace(/\D/g, "");
+    if (token.length < 6) {
+      setError("Enter the 6-digit code from your email.");
+      return;
+    }
+    setVerifying(true);
+    setError("");
+    try {
+      const supabase = createClient();
+      const { error: verifyError } = await supabase.auth.verifyOtp({ email, token, type: "email" });
+      if (verifyError) {
+        console.error("verifyOtp error:", verifyError);
+        setError(friendlyError(verifyError.message));
+        setVerifying(false);
+        return;
+      }
+      // Session is now set in THIS browser. Go home, signed in.
+      router.push("/");
+      router.refresh();
+    } catch (err) {
+      console.error("verifyOtp threw:", err);
+      setError(friendlyError(err instanceof Error ? err.message : String(err)));
+      setVerifying(false);
+    }
+  }
+
   if (sent) {
     return (
-      <div className="glass mx-auto flex w-full max-w-md flex-col items-center gap-4 rounded-2xl p-6 text-center">
+      <form onSubmit={verifyCode} className="glass mx-auto flex w-full max-w-md flex-col gap-4 rounded-2xl p-6 text-center">
         <h2 className="font-display text-2xl font-bold text-white">Check your email</h2>
-        <p className="text-white/70">
-          We sent a sign-in link to <strong className="text-emerald-300">{email}</strong>. Open it to sign in — it&apos;s
-          free.
+        <p className="text-sm text-white/70">
+          We sent a 6-digit code to <strong className="text-emerald-300">{email}</strong>. Enter it below to sign in —
+          it works right here, no need to switch apps.
         </p>
-      </div>
+
+        <input
+          inputMode="numeric"
+          autoComplete="one-time-code"
+          maxLength={6}
+          value={code}
+          onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+          placeholder="6-digit code"
+          className="rounded-lg border border-white/15 bg-white/5 px-4 py-3 text-center text-2xl tracking-[0.4em] text-white outline-none placeholder:tracking-normal placeholder:text-base placeholder:text-white/40 focus:ring-2 focus:ring-emerald-500/50"
+        />
+
+        {error && <p className="text-sm text-red-300">{error}</p>}
+
+        <button
+          type="submit"
+          disabled={verifying}
+          className="lift w-full rounded-full bg-emerald-500 py-3 font-display font-semibold text-emerald-950 hover:bg-emerald-400 disabled:opacity-60"
+        >
+          {verifying ? "Signing in…" : "Verify & sign in"}
+        </button>
+
+        <p className="text-xs text-white/45">
+          (You can also just tap the link in the email — but the code is the most reliable way.)
+        </p>
+        <button
+          type="button"
+          onClick={() => {
+            setSent(false);
+            setCode("");
+            setError("");
+          }}
+          className="text-xs text-emerald-300 underline underline-offset-2 hover:text-emerald-200"
+        >
+          Use a different email
+        </button>
+      </form>
     );
   }
 
@@ -106,12 +169,13 @@ export default function WaitlistForm() {
     <form onSubmit={handleSubmit} className="glass mx-auto flex w-full max-w-md flex-col gap-4 rounded-2xl p-6">
       <div className="text-center">
         <h1 className="font-display text-3xl font-bold text-white">Sign in to Rusookh</h1>
-        <p className="mt-2 text-white/60">Enter your email — we&apos;ll send a magic link. It&apos;s completely free.</p>
+        <p className="mt-2 text-white/60">Enter your email — we&apos;ll send a 6-digit code. It&apos;s completely free.</p>
       </div>
 
       {cameFromAuthError && (
         <p className="rounded-lg border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
-          That sign-in link didn&apos;t work (it may have expired). Please request a new one below.
+          That sign-in link didn&apos;t work. Enter your email below and use the <strong>6-digit code</strong> instead
+          — it always works.
         </p>
       )}
 
@@ -145,7 +209,7 @@ export default function WaitlistForm() {
         disabled={submitting}
         className="lift w-full rounded-full bg-emerald-500 py-3 font-display font-semibold text-emerald-950 hover:bg-emerald-400 disabled:opacity-60"
       >
-        {submitting ? "Sending…" : "Email me a sign-in link"}
+        {submitting ? "Sending…" : "Email me a code"}
       </button>
     </form>
   );

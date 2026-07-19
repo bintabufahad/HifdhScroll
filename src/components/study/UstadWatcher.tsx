@@ -113,8 +113,8 @@ export default function UstadWatcher({ enabled }: { enabled: boolean }) {
     >
       <div className="flex items-end gap-2">
         {peeking && (
-          <span className="mb-10 hidden max-w-[45vw] rounded-full bg-black/70 px-3 py-1 text-xs text-emerald-200/90 backdrop-blur sm:mb-14 sm:inline">
-            Assalamu alaikum — the Ustad is watching. Stay focused.
+          <span className="mb-10 inline-block max-w-[52vw] rounded-lg bg-black/75 px-2.5 py-1 text-[11px] leading-snug text-emerald-200/90 backdrop-blur sm:mb-14 sm:max-w-none sm:rounded-full sm:px-3 sm:text-xs">
+            Your Ustad is watching — stay focused.
           </span>
         )}
         <UstadFigure />
