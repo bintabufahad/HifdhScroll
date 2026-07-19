@@ -107,7 +107,20 @@ export default function WaitlistForm() {
     setError("");
     try {
       const supabase = createClient();
-      const { error: verifyError } = await supabase.auth.verifyOtp({ email, token, type: "email" });
+      // The same 6-digit code is delivered as a "signup" OTP for brand-new
+      // accounts and an "email" (magic-link) OTP for returning ones. We don't
+      // know which the person is, so try both types before deciding the code
+      // is bad - otherwise a perfectly correct code "always" fails for whichever
+      // group we didn't guess.
+      let verifyError = null;
+      for (const type of ["email", "signup"] as const) {
+        const { error } = await supabase.auth.verifyOtp({ email, token, type });
+        if (!error) {
+          verifyError = null;
+          break;
+        }
+        verifyError = error;
+      }
       if (verifyError) {
         console.error("verifyOtp error:", verifyError);
         setError(friendlyError(verifyError.message));
