@@ -20,7 +20,13 @@ function friendlyError(message: string): string {
   if (m.toLowerCase().includes("expired") || m.toLowerCase().includes("invalid")) {
     return "That code is wrong or expired. Check the newest email and re-enter the 6-digit code.";
   }
-  if (m === "" || m === "{}" || m === "[object Object]" || m.toLowerCase().includes("database error")) {
+  if (m.toLowerCase().includes("sending") || m.toLowerCase().includes("smtp")) {
+    return "We couldn't send the email right now. Please try again in a moment.";
+  }
+  if (m.toLowerCase().includes("database error")) {
+    return "Sign-up error (database). Please try again shortly.";
+  }
+  if (m === "" || m === "{}" || m === "[object Object]") {
     return "The server had a hiccup — please wait a moment and try again.";
   }
   return m;
