@@ -100,7 +100,7 @@ export default function WaitlistForm() {
     e.preventDefault();
     const token = code.replace(/\D/g, "");
     if (token.length < 6) {
-      setError("Enter the 6-digit code from your email.");
+      setError("Enter the full code from your email.");
       return;
     }
     setVerifying(true);
@@ -142,17 +142,17 @@ export default function WaitlistForm() {
       <form onSubmit={verifyCode} className="glass mx-auto flex w-full max-w-md flex-col gap-4 rounded-2xl p-6 text-center">
         <h2 className="font-display text-2xl font-bold text-white">Check your email</h2>
         <p className="text-sm text-white/70">
-          We sent a 6-digit code to <strong className="text-emerald-300">{email}</strong>. Enter it below to sign in —
+          We sent a code to <strong className="text-emerald-300">{email}</strong>. Enter it below to sign in —
           it works right here, no need to switch apps.
         </p>
 
         <input
           inputMode="numeric"
           autoComplete="one-time-code"
-          maxLength={6}
+          maxLength={10}
           value={code}
           onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
-          placeholder="6-digit code"
+          placeholder="Enter the code"
           className="rounded-lg border border-white/15 bg-white/5 px-4 py-3 text-center text-2xl tracking-[0.4em] text-white outline-none placeholder:tracking-normal placeholder:text-base placeholder:text-white/40 focus:ring-2 focus:ring-emerald-500/50"
         />
 
@@ -188,12 +188,12 @@ export default function WaitlistForm() {
     <form onSubmit={handleSubmit} className="glass mx-auto flex w-full max-w-md flex-col gap-4 rounded-2xl p-6">
       <div className="text-center">
         <h1 className="font-display text-3xl font-bold text-white">Sign in to Rusookh</h1>
-        <p className="mt-2 text-white/60">Enter your email — we&apos;ll send a 6-digit code. It&apos;s completely free.</p>
+        <p className="mt-2 text-white/60">Enter your email — we&apos;ll send you a code. It&apos;s completely free.</p>
       </div>
 
       {cameFromAuthError && (
         <p className="rounded-lg border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
-          That sign-in link didn&apos;t work. Enter your email below and use the <strong>6-digit code</strong> instead
+          That sign-in link didn&apos;t work. Enter your email below and use the <strong>code</strong> instead
           — it always works.
         </p>
       )}
