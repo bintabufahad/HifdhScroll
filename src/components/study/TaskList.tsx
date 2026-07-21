@@ -7,10 +7,13 @@ import type { StudyTask } from "@/lib/types";
 export default function TaskList({
   tasks,
   onTasksChange,
+  classId,
   fill = false,
 }: {
   tasks: StudyTask[];
   onTasksChange: (tasks: StudyTask[]) => void;
+  /** The class these tasks belong to, so a new task is scoped to this room. */
+  classId: string;
   /** When true, the card fills its parent's height and the list scrolls inside. */
   fill?: boolean;
 }) {
@@ -34,7 +37,7 @@ export default function TaskList({
 
     const { data, error } = await supabase
       .from("study_tasks")
-      .insert({ title: trimmed, user_id: user.id })
+      .insert({ title: trimmed, user_id: user.id, class_id: classId })
       .select("id, title, is_done, created_at, completed_at")
       .single();
 

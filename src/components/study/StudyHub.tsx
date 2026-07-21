@@ -22,8 +22,8 @@ export default function StudyHub({ initialClasses }: { initialClasses: StudyClas
   const [classes, setClasses] = useState(initialClasses);
   const [name, setName] = useState("");
   const [creating, setCreating] = useState(false);
+  const [showForm, setShowForm] = useState(false);
   const [error, setError] = useState("");
-  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   async function createClass(e: React.FormEvent) {
     e.preventDefault();
@@ -62,111 +62,122 @@ export default function StudyHub({ initialClasses }: { initialClasses: StudyClas
     if (!delError) setClasses((prev) => prev.filter((c) => c.id !== id));
   }
 
-  async function copyLink(c: StudyClass) {
-    const url = `${window.location.origin}/study/class/${c.room}`;
-    try {
-      await navigator.clipboard.writeText(url);
-      setCopiedId(c.id);
-      setTimeout(() => setCopiedId(null), 2000);
-    } catch {
-      setError("Couldn't copy the link.");
-    }
-  }
+  const createForm = (
+    <form onSubmit={createClass} className="flex w-full max-w-sm flex-col gap-2">
+      <input
+        autoFocus
+        type="text"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        placeholder="Name your class (e.g. Fajr Halaqah)"
+        className="w-full rounded-lg border border-white/15 bg-white/5 px-4 py-2.5 text-center text-white outline-none placeholder:text-white/40 focus:ring-2 focus:ring-emerald-500/50"
+      />
+      <div className="flex justify-center gap-2">
+        <button
+          type="submit"
+          disabled={creating}
+          className="lift rounded-lg bg-emerald-500 px-5 py-2.5 font-semibold text-emerald-950 hover:bg-emerald-400 disabled:opacity-60"
+        >
+          {creating ? "Creating…" : "Create class"}
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setShowForm(false);
+            setName("");
+            setError("");
+          }}
+          className="rounded-lg border border-white/15 px-4 py-2.5 text-white/70 hover:bg-white/5"
+        >
+          Cancel
+        </button>
+      </div>
+      {error && <p className="text-center text-sm text-red-300">{error}</p>}
+    </form>
+  );
 
   return (
-    <div className="bg-app-dark min-h-[100dvh] px-4 py-6 sm:px-6 sm:py-10">
-      <div className="mx-auto w-full max-w-3xl">
-        <header className="mb-6 flex items-center gap-3">
-          <Link
-            href="/"
-            className="lift inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-500 px-4 py-1.5 text-sm font-semibold text-emerald-950 transition hover:bg-emerald-400"
-          >
-            ← Home
-          </Link>
-          <h1 className="font-display text-xl font-bold text-white sm:text-3xl">
-            Student of <span className="text-emerald-300">Knowledge</span>
-          </h1>
-        </header>
-
-        {/* Study alone */}
+    <div className="bg-app-dark flex min-h-[100dvh] flex-col px-4 py-6 sm:px-6 sm:py-10">
+      <header className="mx-auto mb-8 flex w-full max-w-4xl items-center gap-3">
         <Link
-          href="/study/solo"
-          className="lift glass mb-8 flex items-center justify-between gap-4 rounded-2xl p-5 transition hover:bg-white/[0.06] sm:p-6"
+          href="/"
+          className="lift inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-500 px-4 py-1.5 text-sm font-semibold text-emerald-950 transition hover:bg-emerald-400"
         >
-          <div>
-            <p className="font-display text-lg font-semibold text-white sm:text-xl">Study alone</p>
-            <p className="mt-1 text-sm text-white/60">
-              Your focus room — timer, a lecture, your planner, and the Ustad keeping you accountable.
-            </p>
-          </div>
-          <span className="text-2xl text-emerald-300">→</span>
+          ← Home
         </Link>
+        <h1 className="font-display text-xl font-bold text-white sm:text-3xl">
+          Student of <span className="text-emerald-300">Knowledge</span>
+        </h1>
+      </header>
 
-        {/* Classes */}
-        <div className="mb-4 flex items-baseline justify-between">
-          <h2 className="font-display text-lg font-semibold text-white sm:text-xl">Study together</h2>
-          <span className="text-xs text-white/45">Share a link · up to 6 join</span>
-        </div>
-
-        <form onSubmit={createClass} className="glass mb-5 flex flex-col gap-2 rounded-2xl p-4 sm:flex-row">
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Name your class (e.g. Fajr Halaqah)"
-            className="min-w-0 flex-1 rounded-lg border border-white/15 bg-white/5 px-4 py-2.5 text-white outline-none placeholder:text-white/40 focus:ring-2 focus:ring-emerald-500/50"
-          />
-          <button
-            type="submit"
-            disabled={creating}
-            className="lift shrink-0 rounded-lg bg-emerald-500 px-5 py-2.5 font-semibold text-emerald-950 hover:bg-emerald-400 disabled:opacity-60"
-          >
-            {creating ? "Creating…" : "+ Create class"}
-          </button>
-        </form>
-
-        {error && <p className="mb-4 text-sm text-red-300">{error}</p>}
-
-        {classes.length === 0 ? (
-          <p className="rounded-2xl border border-white/10 bg-white/[0.02] p-6 text-center text-sm text-white/50">
-            No classes yet. Create one above and share its link to study together.
-          </p>
-        ) : (
-          <ul className="flex flex-col gap-2">
-            {classes.map((c) => (
-              <li
-                key={c.id}
-                className="glass flex items-center gap-2 rounded-xl p-3 sm:gap-3 sm:p-4"
+      {classes.length === 0 ? (
+        // No classes yet: a big + in the middle to create the first one.
+        <div className="flex flex-1 flex-col items-center justify-center gap-5 text-center">
+          {showForm ? (
+            createForm
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={() => setShowForm(true)}
+                aria-label="Create your first class"
+                className="lift flex h-32 w-32 items-center justify-center rounded-3xl border-2 border-dashed border-emerald-400/40 bg-emerald-500/5 text-6xl font-light text-emerald-300 transition hover:border-emerald-400 hover:bg-emerald-500/10"
               >
-                <span className="min-w-0 flex-1 truncate font-medium text-white" title={c.name}>
-                  {c.name}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => copyLink(c)}
-                  className="shrink-0 rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-white/80 hover:bg-white/10 sm:text-sm"
-                >
-                  {copiedId === c.id ? "✓ Copied" : "Copy link"}
-                </button>
-                <Link
-                  href={`/study/class/${c.room}`}
-                  className="lift shrink-0 rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-emerald-950 hover:bg-emerald-400 sm:text-sm"
-                >
-                  Enter
-                </Link>
+                +
+              </button>
+              <div>
+                <p className="font-display text-lg font-semibold text-white">Create your first class</p>
+                <p className="mt-1 text-sm text-white/55">Your focus room — timer, lecture, planner, and a call you can share.</p>
+              </div>
+            </>
+          )}
+        </div>
+      ) : (
+        <div className="mx-auto w-full max-w-4xl">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
+            {classes.map((c) => (
+              <div
+                key={c.id}
+                className="glass lift group relative flex aspect-square flex-col justify-between rounded-2xl p-4 transition hover:bg-white/[0.06]"
+              >
                 <button
                   type="button"
                   onClick={() => deleteClass(c.id)}
                   aria-label="Delete class"
-                  className="shrink-0 text-red-300/70 hover:text-red-300"
+                  className="absolute right-2 top-2 text-white/30 opacity-0 transition hover:text-red-300 group-hover:opacity-100"
                 >
                   ✕
                 </button>
-              </li>
+                <Link href={`/study/class/${c.room}`} className="flex flex-1 flex-col justify-between">
+                  <span className="text-2xl">📚</span>
+                  <span className="mt-2 line-clamp-2 font-display font-semibold text-white" title={c.name}>
+                    {c.name}
+                  </span>
+                  <span className="mt-1 text-xs text-emerald-300">Enter →</span>
+                </Link>
+              </div>
             ))}
-          </ul>
-        )}
-      </div>
+
+            {/* Create-another tile */}
+            <div className="flex aspect-square items-center justify-center rounded-2xl border-2 border-dashed border-white/12">
+              {showForm ? (
+                <div className="w-full px-2">{createForm}</div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setShowForm(true)}
+                  aria-label="Create a new class"
+                  className="lift flex h-full w-full flex-col items-center justify-center gap-1 text-emerald-300 transition hover:bg-emerald-500/5"
+                >
+                  <span className="text-4xl font-light">+</span>
+                  <span className="text-xs font-medium">New class</span>
+                </button>
+              )}
+            </div>
+          </div>
+          {showForm && error && <p className="mt-3 text-center text-sm text-red-300">{error}</p>}
+        </div>
+      )}
     </div>
   );
 }

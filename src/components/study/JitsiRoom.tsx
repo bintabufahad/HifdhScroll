@@ -11,7 +11,11 @@ import { useEffect, useRef } from "react";
  * class's unique slug, so everyone who opens the same class link lands together.
  */
 
-type JitsiApi = { dispose?: () => void };
+type JitsiApi = {
+  dispose?: () => void;
+  executeCommand?: (command: string, ...args: unknown[]) => void;
+  addListener?: (event: string, handler: (...args: unknown[]) => void) => void;
+};
 type JitsiConstructor = new (domain: string, options: Record<string, unknown>) => JitsiApi;
 
 declare global {
@@ -32,7 +36,7 @@ export default function JitsiRoom({ room, displayName }: { room: string; display
 
     function init() {
       if (cancelled || !containerRef.current || !window.JitsiMeetExternalAPI) return;
-      apiRef.current = new window.JitsiMeetExternalAPI(JITSI_DOMAIN, {
+      const api = new window.JitsiMeetExternalAPI(JITSI_DOMAIN, {
         roomName: room,
         parentNode: containerRef.current,
         width: "100%",
@@ -49,6 +53,15 @@ export default function JitsiRoom({ room, displayName }: { room: string; display
           SHOW_JITSI_WATERMARK: false,
           SHOW_CHROME_EXTENSION_BANNER: false,
         },
+      });
+      apiRef.current = api;
+      // Tile view shows every participant equally: alone you fill the frame, and
+      // as soon as someone joins your tile shrinks to make room for theirs.
+      api.addListener?.("videoConferenceJoined", () => {
+        api.executeCommand?.("setTileView", true);
+      });
+      api.addListener?.("participantJoined", () => {
+        api.executeCommand?.("setTileView", true);
       });
     }
 

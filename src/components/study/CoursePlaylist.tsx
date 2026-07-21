@@ -21,11 +21,14 @@ export default function CoursePlaylist({
   onToggle,
   onPlayLecture,
   initialItems,
+  classId,
 }: {
   open: boolean;
   onToggle: () => void;
   onPlayLecture: (id: string) => void;
   initialItems: CourseItem[];
+  /** The class this course belongs to, so a new item is scoped to this room. */
+  classId: string;
 }) {
   const [items, setItems] = useState<CourseItem[]>(initialItems);
   const [type, setType] = useState<CourseItemType>("youtube");
@@ -68,6 +71,7 @@ export default function CoursePlaylist({
       .from("course_items")
       .insert({
         user_id: user.id,
+        class_id: classId,
         type,
         url: trimmed,
         title: title.trim() || (type === "youtube" ? "Lecture" : "Reading (PDF)"),

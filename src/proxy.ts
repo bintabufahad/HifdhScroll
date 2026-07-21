@@ -6,15 +6,13 @@ import { updateSession } from "@/lib/supabase/middleware";
  * signed-in user; if there's none, send them to the sign-in page and remember
  * where they were headed. /feedback (the reviews page) is public.
  *
- * Exception: a class join link (/study/class/<room>) is public so anyone can
- * join a group-study call from a shared link without having to sign in first.
+ * Class join links (/study/class/<room>) also require sign-in, so everyone in a
+ * call has a name - the sign-in just carries them straight back to the room.
  */
 export async function proxy(request: NextRequest) {
   const { supabaseResponse, user } = await updateSession(request);
 
-  const isPublicClassJoin = request.nextUrl.pathname.startsWith("/study/class/");
-
-  if (!user && !isPublicClassJoin) {
+  if (!user) {
     return redirectTo(request, "/waitlist", "signin", request.nextUrl.pathname + request.nextUrl.search);
   }
 
