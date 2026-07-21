@@ -67,6 +67,15 @@ export interface Review {
   user_id: string;
 }
 
+export interface StudyClass {
+  id: string;
+  owner_id: string;
+  name: string;
+  /** Unique slug used as the Jitsi room name and in the shareable join link. */
+  room: string;
+  created_at: string;
+}
+
 export type CourseItemType = "youtube" | "pdf";
 
 export interface CourseItem {
