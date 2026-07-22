@@ -115,7 +115,7 @@ export default function ClassRoom({
           <MainStage lectureId={lectureId} onSetLecture={setLectureId} onClear={() => setLectureId(null)} />
         </div>
 
-        {/* Camera / group call */}
+        {/* Camera (group call opens in a full-screen overlay below) */}
         <div className="area-camera glass relative flex min-h-0 min-w-0 flex-col overflow-hidden rounded-2xl p-1.5 sm:p-2">
           {mode === "camera" ? (
             <>
@@ -129,16 +129,16 @@ export default function ClassRoom({
               <CameraView camera={camera} big />
             </>
           ) : (
-            <>
+            <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
+              <p className="text-sm text-white/70">You&apos;re in the group call.</p>
               <button
                 type="button"
-                onClick={shareLink}
-                className="lift absolute right-3 top-3 z-10 inline-flex items-center gap-1 rounded-full border border-emerald-400/40 bg-black/60 px-3 py-1.5 text-xs font-semibold text-emerald-100 backdrop-blur transition hover:bg-black/80"
+                onClick={() => setMode("call")}
+                className="lift rounded-full bg-emerald-500 px-4 py-1.5 text-xs font-semibold text-emerald-950 hover:bg-emerald-400"
               >
-                {copied ? "✓ Link copied" : "🔗 Invite more"}
+                Return to call
               </button>
-              <JitsiRoom room={studyClass.room} displayName={displayName} />
-            </>
+            </div>
           )}
         </div>
 
@@ -147,6 +147,37 @@ export default function ClassRoom({
           <TaskList tasks={tasks} onTasksChange={setTasks} classId={studyClass.id} fill />
         </div>
       </main>
+
+      {/* Full-screen group call: gives Jitsi (and its sign-in prompt) room so
+          nothing is cut off. Leaving the call returns to the camera view. */}
+      {mode === "call" && (
+        <div className="fixed inset-0 z-[60] flex flex-col bg-black">
+          <div className="flex shrink-0 items-center justify-between gap-2 bg-black/85 px-3 py-2 sm:px-4">
+            <span className="min-w-0 truncate text-sm font-semibold text-emerald-300">
+              {studyClass.name} · group call
+            </span>
+            <div className="flex shrink-0 gap-2">
+              <button
+                type="button"
+                onClick={shareLink}
+                className="lift inline-flex items-center gap-1 rounded-full border border-emerald-400/40 bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-100 transition hover:bg-emerald-500/20"
+              >
+                {copied ? "✓ Copied" : "🔗 Invite more"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode("camera")}
+                className="rounded-full bg-red-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-red-500"
+              >
+                Leave call
+              </button>
+            </div>
+          </div>
+          <div className="min-h-0 flex-1">
+            <JitsiRoom room={studyClass.room} displayName={displayName} onClose={() => setMode("camera")} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

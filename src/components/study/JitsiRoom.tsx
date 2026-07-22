@@ -27,9 +27,24 @@ declare global {
 const JITSI_DOMAIN = "meet.jit.si";
 const SCRIPT_ID = "jitsi-external-api";
 
-export default function JitsiRoom({ room, displayName }: { room: string; displayName?: string }) {
+export default function JitsiRoom({
+  room,
+  displayName,
+  onClose,
+}: {
+  room: string;
+  displayName?: string;
+  /** Fired when this user hangs up / leaves, so the class can return to the camera. */
+  onClose?: () => void;
+}) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const apiRef = useRef<JitsiApi | null>(null);
+  // Keep the latest onClose in a ref so re-renders don't tear down and rebuild
+  // the whole call (which would happen if onClose were an effect dependency).
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   useEffect(() => {
     let cancelled = false;
@@ -63,6 +78,9 @@ export default function JitsiRoom({ room, displayName }: { room: string; display
       api.addListener?.("participantJoined", () => {
         api.executeCommand?.("setTileView", true);
       });
+      // When the user hangs up (or the room closes), return to the camera view.
+      api.addListener?.("readyToClose", () => onCloseRef.current?.());
+      api.addListener?.("videoConferenceLeft", () => onCloseRef.current?.());
     }
 
     function ensureScript() {
