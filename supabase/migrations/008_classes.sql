@@ -28,3 +28,7 @@ create policy "owner can update own classes" on public.classes for update using 
 
 drop policy if exists "owner can delete own classes" on public.classes;
 create policy "owner can delete own classes" on public.classes for delete using (auth.uid() = owner_id);
+
+-- Make sure the API roles can reach the table (RLS still gates every row).
+grant select, insert, update, delete on public.classes to authenticated;
+grant select on public.classes to anon;
