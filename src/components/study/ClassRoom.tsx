@@ -7,7 +7,9 @@ import StudyTimer from "./StudyTimer";
 import TaskList from "./TaskList";
 import CoursePlaylist from "./CoursePlaylist";
 import UstadWatcher from "./UstadWatcher";
+import CameraView from "./CameraView";
 import JitsiRoom from "./JitsiRoom";
+import { useCamera } from "./useCamera";
 import type { CourseItem, StudyClass, StudyTask } from "@/lib/types";
 
 export default function ClassRoom({
@@ -15,17 +17,25 @@ export default function ClassRoom({
   initialTasks,
   initialCourse,
   displayName,
+  isOwner,
 }: {
   studyClass: StudyClass;
   initialTasks: StudyTask[];
   initialCourse: CourseItem[];
   displayName?: string;
+  /** The class owner starts on their own camera; someone opening a shared invite joins the call. */
+  isOwner: boolean;
 }) {
   const [tasks, setTasks] = useState(initialTasks);
   const [toast, setToast] = useState("");
   const [lectureId, setLectureId] = useState<string | null>(null);
   const [courseOpen, setCourseOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  // "camera" = just your own camera, no Jitsi, no login. "call" = the group
+  // video call (Jitsi), started only when you invite people (or when you open
+  // someone else's invite link).
+  const [mode, setMode] = useState<"camera" | "call">(isOwner ? "camera" : "call");
+  const camera = useCamera();
 
   function handleSessionComplete(seconds: number) {
     const minutes = Math.max(1, Math.round(seconds / 60));
@@ -33,25 +43,31 @@ export default function ClassRoom({
     setTimeout(() => setToast(""), 5000);
   }
 
-  async function shareInvite() {
+  async function shareLink() {
     const inviteUrl = `${window.location.origin}/study/class/${studyClass.room}`;
-    // Prefer the native share sheet on phones; fall back to copying the link.
     try {
       if (navigator.share) {
-        await navigator.share({ title: studyClass.name, text: `Join my class on Rusookh`, url: inviteUrl });
+        await navigator.share({ title: studyClass.name, text: "Join my class on Rusookh", url: inviteUrl });
         return;
       }
     } catch {
-      // user dismissed the share sheet - fall through to copy
+      // share sheet dismissed - fall through to copy
     }
     try {
       await navigator.clipboard.writeText(inviteUrl);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      setToast("Couldn't share — long-press the address bar link to copy it.");
+      setToast("Couldn't share — copy the link from your address bar.");
       setTimeout(() => setToast(""), 4000);
     }
+  }
+
+  async function inviteFriends() {
+    // Free the camera device so the group call can take it over, then go live.
+    if (camera.cameraOn) await camera.toggleCamera();
+    setMode("call");
+    await shareLink();
   }
 
   return (
@@ -99,16 +115,31 @@ export default function ClassRoom({
           <MainStage lectureId={lectureId} onSetLecture={setLectureId} onClear={() => setLectureId(null)} />
         </div>
 
-        {/* Group video call (landscape). The Share button sits right on it. */}
+        {/* Camera / group call */}
         <div className="area-camera glass relative flex min-h-0 min-w-0 flex-col overflow-hidden rounded-2xl p-1.5 sm:p-2">
-          <button
-            type="button"
-            onClick={shareInvite}
-            className="lift absolute right-3 top-3 z-10 inline-flex items-center gap-1 rounded-full border border-emerald-400/40 bg-black/60 px-3 py-1.5 text-xs font-semibold text-emerald-100 backdrop-blur transition hover:bg-black/80"
-          >
-            {copied ? "✓ Link copied" : "🔗 Share to invite"}
-          </button>
-          <JitsiRoom room={studyClass.room} displayName={displayName} />
+          {mode === "camera" ? (
+            <>
+              <button
+                type="button"
+                onClick={inviteFriends}
+                className="lift absolute right-3 top-3 z-10 inline-flex items-center gap-1 rounded-full border border-emerald-400/40 bg-black/60 px-3 py-1.5 text-xs font-semibold text-emerald-100 backdrop-blur transition hover:bg-black/80"
+              >
+                👥 Invite friends
+              </button>
+              <CameraView camera={camera} big />
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={shareLink}
+                className="lift absolute right-3 top-3 z-10 inline-flex items-center gap-1 rounded-full border border-emerald-400/40 bg-black/60 px-3 py-1.5 text-xs font-semibold text-emerald-100 backdrop-blur transition hover:bg-black/80"
+              >
+                {copied ? "✓ Link copied" : "🔗 Invite more"}
+              </button>
+              <JitsiRoom room={studyClass.room} displayName={displayName} />
+            </>
+          )}
         </div>
 
         {/* Planner / to-do */}

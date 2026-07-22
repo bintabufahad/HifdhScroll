@@ -54,6 +54,7 @@ export default async function ClassRoomPage({ params }: { params: Promise<{ room
       initialTasks={(tasks as StudyTask[]) ?? []}
       initialCourse={(course as CourseItem[]) ?? []}
       displayName={displayName}
+      isOwner={(studyClass as StudyClass).owner_id === user.id}
     />
   );
 }

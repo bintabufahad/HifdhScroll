@@ -48,11 +48,15 @@ export default function StudyHub({ initialClasses }: { initialClasses: StudyClas
       .select("id, owner_id, name, room, created_at")
       .single();
 
-    setCreating(false);
     if (insertError || !data) {
+      setCreating(false);
       setError("Couldn't create the class. Please try again.");
       return;
     }
+    // Keep the button disabled and showing "Opening class…" right through the
+    // navigation - the component unmounts when the class room loads, so we never
+    // reset `creating` on success (that's what made the button look idle for a
+    // second or two before anything happened).
     router.push(`/study/class/${(data as StudyClass).room}`);
   }
 
@@ -76,9 +80,12 @@ export default function StudyHub({ initialClasses }: { initialClasses: StudyClas
         <button
           type="submit"
           disabled={creating}
-          className="lift rounded-lg bg-emerald-500 px-5 py-2.5 font-semibold text-emerald-950 hover:bg-emerald-400 disabled:opacity-60"
+          className="lift inline-flex items-center gap-2 rounded-lg bg-emerald-500 px-5 py-2.5 font-semibold text-emerald-950 hover:bg-emerald-400 disabled:opacity-70"
         >
-          {creating ? "Creating…" : "Create class"}
+          {creating && (
+            <span className="h-4 w-4 animate-spin rounded-full border-2 border-emerald-950/30 border-t-emerald-950" />
+          )}
+          {creating ? "Opening class…" : "Create class"}
         </button>
         <button
           type="button"

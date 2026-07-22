@@ -35,7 +35,6 @@ export default function WaitlistForm() {
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState(searchParams.get("email") ?? "");
-  const [suggestion, setSuggestion] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [sent, setSent] = useState(false);
@@ -51,7 +50,6 @@ export default function WaitlistForm() {
         emailRedirectTo: `${window.location.origin}/auth/callback`,
         data: {
           name: name.trim() || undefined,
-          suggestion: suggestion.trim() || undefined,
         },
       },
     };
@@ -141,14 +139,6 @@ export default function WaitlistForm() {
         onChange={(e) => setEmail(e.target.value)}
         className="rounded-lg border border-white/15 bg-white/5 px-4 py-3 text-white outline-none placeholder:text-white/40 focus:ring-2 focus:ring-emerald-500/50"
       />
-      <textarea
-        placeholder="Any suggestions or feedback? (optional)"
-        value={suggestion}
-        onChange={(e) => setSuggestion(e.target.value)}
-        rows={3}
-        className="rounded-lg border border-white/15 bg-white/5 px-4 py-3 text-white outline-none placeholder:text-white/40 focus:ring-2 focus:ring-emerald-500/50"
-      />
-
       {error && <p className="text-sm text-red-300">{error}</p>}
 
       <button
