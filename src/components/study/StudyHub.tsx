@@ -140,29 +140,32 @@ export default function StudyHub({ initialClasses }: { initialClasses: StudyClas
           )}
         </div>
       ) : (
-        <div className="mx-auto w-full max-w-3xl">
-          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-3">
+        <div className="mx-auto w-full max-w-2xl">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
             {classes.map((c) => (
               <div key={c.id} className="group relative">
                 <Link
                   href={`/study/class/${c.room}`}
-                  className="flex items-center gap-3 rounded-xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.015] p-3 pr-9 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-400/40 hover:from-emerald-500/[0.12] hover:to-white/[0.02] hover:shadow-[0_10px_26px_-14px_rgba(16,185,129,0.55)]"
+                  className="flex aspect-[3/2] flex-col justify-between overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.015] p-3 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-400/40 hover:from-emerald-500/[0.12] hover:to-white/[0.02] hover:shadow-[0_10px_26px_-14px_rgba(16,185,129,0.55)]"
                 >
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-500/15 text-base ring-1 ring-emerald-400/20 transition duration-300 group-hover:bg-emerald-500/25 group-hover:ring-emerald-400/40">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/15 text-sm ring-1 ring-emerald-400/20 transition duration-300 group-hover:bg-emerald-500/25 group-hover:ring-emerald-400/40">
                     📚
                   </span>
-                  <span className="min-w-0 flex-1 truncate font-display text-sm font-semibold text-white" title={c.name}>
-                    {c.name}
-                  </span>
-                  <span className="shrink-0 text-sm font-medium text-emerald-300/90 transition-transform duration-300 group-hover:translate-x-0.5">
-                    →
-                  </span>
+                  <div className="min-w-0">
+                    <span className="block truncate font-display text-sm font-semibold text-white" title={c.name}>
+                      {c.name}
+                    </span>
+                    <span className="mt-0.5 flex items-center gap-1 text-xs font-medium text-emerald-300/90">
+                      Enter
+                      <span className="transition-transform duration-300 group-hover:translate-x-0.5">→</span>
+                    </span>
+                  </div>
                 </Link>
                 <button
                   type="button"
                   onClick={() => deleteClass(c.id)}
                   aria-label="Delete class"
-                  className="absolute right-1.5 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full bg-black/40 text-xs text-white/40 opacity-0 backdrop-blur transition hover:bg-red-500/20 hover:text-red-300 group-hover:opacity-100"
+                  className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-black/40 text-xs text-white/40 opacity-0 backdrop-blur transition hover:bg-red-500/20 hover:text-red-300 group-hover:opacity-100"
                 >
                   ✕
                 </button>
@@ -171,15 +174,15 @@ export default function StudyHub({ initialClasses }: { initialClasses: StudyClas
 
             {/* Create-another tile */}
             {showForm ? (
-              <div className="glass rounded-xl px-2 py-3 sm:col-span-2">{createForm}</div>
+              <div className="glass col-span-2 rounded-xl px-2 py-3 sm:col-span-3">{createForm}</div>
             ) : (
               <button
                 type="button"
                 onClick={() => setShowForm(true)}
                 aria-label="Create a new class"
-                className="group flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-white/12 p-3 text-emerald-300/90 transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-400/50 hover:bg-emerald-500/[0.06] hover:text-emerald-200"
+                className="group flex aspect-[3/2] flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-white/12 text-emerald-300/90 transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-400/50 hover:bg-emerald-500/[0.06] hover:text-emerald-200"
               >
-                <span className="text-lg font-light">+</span>
+                <span className="text-2xl font-light">+</span>
                 <span className="text-xs font-medium">New class</span>
               </button>
             )}
