@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import MainStage from "./MainStage";
 import StudyTimer from "./StudyTimer";
@@ -8,14 +8,11 @@ import TaskList from "./TaskList";
 import CoursePlaylist from "./CoursePlaylist";
 import UstadWatcher from "./UstadWatcher";
 import CameraView from "./CameraView";
-import JitsiRoom, { type JitsiConfig } from "./JitsiRoom";
 import VideoGrid from "./VideoGrid";
 import Whiteboard from "./Whiteboard";
 import { useCamera } from "./useCamera";
-import { useDailyCall } from "./useDailyCall";
+import { useWebRTCCall } from "./useWebRTCCall";
 import type { CourseItem, StudyClass, StudyTask } from "@/lib/types";
-
-type CallConfig = { provider: "daily"; url: string } | ({ provider: "jitsi" } & JitsiConfig);
 
 export default function ClassRoom({
   studyClass,
@@ -36,42 +33,24 @@ export default function ClassRoom({
   const [courseOpen, setCourseOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [whiteboardOpen, setWhiteboardOpen] = useState(false);
-  // "camera" = just your own camera (no call). "call" = the group video call.
+  // "camera" = just your own camera. "call" = the live peer-to-peer group call.
   const [mode, setMode] = useState<"camera" | "call">(isOwner ? "camera" : "call");
-  const [config, setConfig] = useState<CallConfig | null>(null);
-  const [configFailed, setConfigFailed] = useState(false);
   const camera = useCamera();
 
-  // Fetch the call configuration the first time we enter call mode.
-  useEffect(() => {
-    if (mode !== "call" || config) return;
-    let cancelled = false;
-    (async () => {
-      try {
-        const res = await fetch(`/api/call-token?room=${encodeURIComponent(studyClass.room)}`);
-        if (!res.ok) throw new Error("bad status");
-        const data = (await res.json()) as CallConfig;
-        if (!cancelled) setConfig(data);
-      } catch {
-        if (!cancelled) setConfigFailed(true);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [mode, config, studyClass.room]);
+  function flashToast(msg: string) {
+    setToast(msg);
+    setTimeout(() => setToast(""), 4500);
+  }
 
-  const dailyUrl = mode === "call" && config?.provider === "daily" ? config.url : null;
-  const backToCamera = () => {
+  const call = useWebRTCCall(mode === "call" ? studyClass.room : null, displayName, (msg) => {
+    flashToast(msg);
     setMode("camera");
     setWhiteboardOpen(false);
-  };
-  const daily = useDailyCall(dailyUrl, displayName, backToCamera);
+  });
 
   function handleSessionComplete(seconds: number) {
     const minutes = Math.max(1, Math.round(seconds / 60));
-    setToast(`Focus session complete — ${minutes} min. Baarak Allahu feek!`);
-    setTimeout(() => setToast(""), 5000);
+    flashToast(`Focus session complete — ${minutes} min. Baarak Allahu feek!`);
   }
 
   async function shareLink() {
@@ -89,8 +68,7 @@ export default function ClassRoom({
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      setToast("Couldn't share — copy the link from your address bar.");
-      setTimeout(() => setToast(""), 4000);
+      flashToast("Couldn't share — copy the link from your address bar.");
     }
   }
 
@@ -98,11 +76,6 @@ export default function ClassRoom({
     if (camera.cameraOn) await camera.toggleCamera(); // free the device for the call
     setMode("call");
     await shareLink();
-  }
-
-  function leaveCall() {
-    daily.leave();
-    backToCamera();
   }
 
   return (
@@ -128,7 +101,7 @@ export default function ClassRoom({
         </div>
       )}
 
-      <header className="mx-auto mb-2 flex w-full max-w-[1600px] shrink-0 items-center gap-2 pr-14 sm:pr-24">
+      <header className="mx-auto mb-2 flex w-full max-w-[1600px] shrink-0 items-center gap-2 pr-24 sm:pr-40">
         <Link
           href="/study"
           className="lift inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-500 px-3 py-1 text-xs font-semibold text-emerald-950 transition hover:bg-emerald-400 sm:px-4 sm:py-1.5 sm:text-sm"
@@ -153,25 +126,6 @@ export default function ClassRoom({
 
         {/* Camera panel — the call replaces ONLY this panel. */}
         <div className="area-camera glass relative flex min-h-0 min-w-0 flex-col overflow-hidden rounded-2xl p-1.5 sm:p-2">
-          {mode === "call" && (
-            <div className="absolute right-3 top-3 z-10 flex gap-1.5">
-              <button
-                type="button"
-                onClick={shareLink}
-                className="lift inline-flex items-center gap-1 rounded-full border border-emerald-400/40 bg-black/60 px-3 py-1.5 text-xs font-semibold text-emerald-100 backdrop-blur transition hover:bg-black/80"
-              >
-                {copied ? "✓ Copied" : "🔗 Invite"}
-              </button>
-              <button
-                type="button"
-                onClick={leaveCall}
-                className="lift rounded-full bg-red-600/90 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur transition hover:bg-red-500"
-              >
-                Leave
-              </button>
-            </div>
-          )}
-
           {mode === "camera" ? (
             <>
               <button
@@ -183,34 +137,32 @@ export default function ClassRoom({
               </button>
               <CameraView camera={camera} big />
             </>
-          ) : config?.provider === "daily" ? (
-            <VideoGrid
-              tiles={daily.tiles}
-              micOn={daily.micOn}
-              camOn={daily.camOn}
-              sharing={daily.sharing}
-              onToggleMic={daily.toggleMic}
-              onToggleCam={daily.toggleCam}
-              onToggleShare={daily.toggleShare}
-            />
-          ) : config?.provider === "jitsi" ? (
-            <JitsiRoom config={config} displayName={displayName} onClose={backToCamera} />
-          ) : configFailed ? (
-            <div className="flex h-full flex-col items-center justify-center gap-3 text-center text-sm text-white/60">
-              Couldn&apos;t start the call.
-              <button
-                type="button"
-                onClick={backToCamera}
-                className="rounded-full bg-emerald-500 px-4 py-1.5 text-xs font-semibold text-emerald-950"
-              >
-                Back to camera
-              </button>
-            </div>
           ) : (
-            <div className="flex h-full flex-col items-center justify-center gap-3 text-white/60">
-              <span className="h-6 w-6 animate-spin rounded-full border-2 border-white/20 border-t-emerald-400" />
-              <span className="text-sm">Starting call…</span>
-            </div>
+            <>
+              <div className="absolute right-3 top-3 z-10 flex gap-1.5">
+                <button
+                  type="button"
+                  onClick={shareLink}
+                  className="lift inline-flex items-center gap-1 rounded-full border border-emerald-400/40 bg-black/60 px-3 py-1.5 text-xs font-semibold text-emerald-100 backdrop-blur transition hover:bg-black/80"
+                >
+                  {copied ? "✓ Copied" : "🔗 Invite"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMode("camera")}
+                  className="lift rounded-full bg-red-600/90 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur transition hover:bg-red-500"
+                >
+                  Leave
+                </button>
+              </div>
+              <VideoGrid
+                tiles={call.tiles}
+                micOn={call.micOn}
+                camOn={call.camOn}
+                onToggleMic={call.toggleMic}
+                onToggleCam={call.toggleCam}
+              />
+            </>
           )}
         </div>
 
@@ -220,7 +172,9 @@ export default function ClassRoom({
         </div>
       </main>
 
-      {whiteboardOpen && <Whiteboard call={daily.callObject} onClose={() => setWhiteboardOpen(false)} />}
+      {whiteboardOpen && (
+        <Whiteboard bus={call.whiteboardBus} send={call.sendWhiteboard} onClose={() => setWhiteboardOpen(false)} />
+      )}
     </div>
   );
 }
