@@ -29,17 +29,17 @@ declare global {
   }
 }
 
-interface CallConfig {
+export interface JitsiConfig {
   scriptUrl: string;
   domain: string;
   roomName: string;
   jwt: string | null;
 }
 
-const PUBLIC_FALLBACK = (room: string): CallConfig => ({
+const PUBLIC_FALLBACK = (roomName: string): JitsiConfig => ({
   scriptUrl: "https://meet.jit.si/external_api.js",
   domain: "meet.jit.si",
-  roomName: room,
+  roomName,
   jwt: null,
 });
 
@@ -63,11 +63,11 @@ function loadScript(src: string): Promise<void> {
 }
 
 export default function JitsiRoom({
-  room,
+  config,
   displayName,
   onClose,
 }: {
-  room: string;
+  config: JitsiConfig;
   displayName?: string;
   /** Fired when this user hangs up / leaves, so the class can return to the camera. */
   onClose?: () => void;
@@ -82,7 +82,7 @@ export default function JitsiRoom({
   useEffect(() => {
     let cancelled = false;
 
-    function build(cfg: CallConfig) {
+    function build(cfg: JitsiConfig) {
       if (cancelled || !containerRef.current || !window.JitsiMeetExternalAPI) return;
       const api = new window.JitsiMeetExternalAPI(cfg.domain, {
         roomName: cfg.roomName,
@@ -113,23 +113,16 @@ export default function JitsiRoom({
     }
 
     async function start() {
-      let cfg: CallConfig;
       try {
-        const res = await fetch(`/api/call-token?room=${encodeURIComponent(room)}`);
-        cfg = res.ok ? await res.json() : PUBLIC_FALLBACK(room);
-      } catch {
-        cfg = PUBLIC_FALLBACK(room);
-      }
-      if (cancelled) return;
-      try {
-        await loadScript(cfg.scriptUrl);
-        build(cfg);
+        await loadScript(config.scriptUrl);
+        build(config);
       } catch {
         // The chosen server's script failed - fall back to the public one.
         if (cancelled) return;
         try {
-          await loadScript(PUBLIC_FALLBACK(room).scriptUrl);
-          build(PUBLIC_FALLBACK(room));
+          const fb = PUBLIC_FALLBACK(config.roomName);
+          await loadScript(fb.scriptUrl);
+          build(fb);
         } catch {
           /* give up quietly */
         }
@@ -143,7 +136,7 @@ export default function JitsiRoom({
       apiRef.current?.dispose?.();
       apiRef.current = null;
     };
-  }, [room, displayName]);
+  }, [config, displayName]);
 
   return <div ref={containerRef} className="h-full w-full overflow-hidden rounded-2xl bg-black/40" />;
 }

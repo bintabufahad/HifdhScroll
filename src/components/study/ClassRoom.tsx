@@ -8,7 +8,7 @@ import TaskList from "./TaskList";
 import CoursePlaylist from "./CoursePlaylist";
 import UstadWatcher from "./UstadWatcher";
 import CameraView from "./CameraView";
-import JitsiRoom from "./JitsiRoom";
+import CallPanel from "./CallPanel";
 import { useCamera } from "./useCamera";
 import type { CourseItem, StudyClass, StudyTask } from "@/lib/types";
 
@@ -147,7 +147,7 @@ export default function ClassRoom({
                   Leave
                 </button>
               </div>
-              <JitsiRoom room={studyClass.room} displayName={displayName} onClose={() => setMode("camera")} />
+              <CallPanel room={studyClass.room} displayName={displayName} onClose={() => setMode("camera")} />
             </>
           )}
         </div>
