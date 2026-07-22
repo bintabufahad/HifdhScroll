@@ -7,11 +7,9 @@ export const dynamic = "force-dynamic";
 
 /**
  * Returns the video-call configuration for a class room. Priority:
- *   1. Daily.co (free, no credit card, no login for anyone) - if DAILY_API_KEY
- *      is set we ensure the room exists and return its URL.
- *   2. Self-hosted Jitsi (JITSI_SELF_HOSTED_DOMAIN) - unlimited, no login.
- *   3. JaaS (8x8) - signed JWT so nobody sees a login.
- *   4. Public meet.jit.si - demo only (5-min limit); last-resort fallback.
+ *   1. Daily.co (free, no card, no login) - ensures the room exists, returns URL.
+ *   2. JaaS (8x8) - signed JWT so nobody sees a Jitsi login.
+ *   3. Public meet.jit.si - demo only; last-resort fallback.
  */
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -25,22 +23,10 @@ export async function GET(request: Request) {
     if (ready) {
       return NextResponse.json({ provider: "daily", url: `https://${dailyDomain}.daily.co/${room}` });
     }
-    // If room creation genuinely failed (e.g. bad key), fall through to Jitsi.
+    // creation failed (e.g. bad key) - fall through to Jitsi
   }
 
-  // 2. Self-hosted Jitsi
-  const selfHosted = process.env.JITSI_SELF_HOSTED_DOMAIN;
-  if (selfHosted) {
-    return NextResponse.json({
-      provider: "jitsi",
-      scriptUrl: `https://${selfHosted}/external_api.js`,
-      domain: selfHosted,
-      roomName: room,
-      jwt: null,
-    });
-  }
-
-  // 3. JaaS
+  // 2. JaaS
   const appId = process.env.JAAS_APP_ID;
   const kid = process.env.JAAS_KID;
   const privateKey = process.env.JAAS_PRIVATE_KEY?.replace(/\\n/g, "\n");
@@ -78,7 +64,7 @@ export async function GET(request: Request) {
     });
   }
 
-  // 4. Public fallback
+  // 3. Public fallback
   return NextResponse.json({
     provider: "jitsi",
     scriptUrl: "https://meet.jit.si/external_api.js",
@@ -97,19 +83,13 @@ async function ensureDailyRoom(apiKey: string, room: string): Promise<boolean> {
       body: JSON.stringify({
         name: room,
         privacy: "public",
-        properties: {
-          enable_screenshare: true,
-          enable_chat: true,
-          start_audio_off: true,
-          start_video_off: false,
-        },
+        properties: { enable_screenshare: true, enable_chat: false, start_audio_off: false, start_video_off: false },
       }),
     });
-    // 200 = created; 400/409 with "already exists" = fine to use.
     if (res.ok) return true;
     if (res.status === 400 || res.status === 409) {
       const body = await res.text();
-      return body.includes("already") || body.includes("exists");
+      return body.includes("already") || body.includes("exist");
     }
     return false;
   } catch {
