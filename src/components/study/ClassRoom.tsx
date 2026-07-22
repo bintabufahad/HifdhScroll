@@ -116,6 +116,7 @@ export default function ClassRoom({
         }}
         initialItems={initialCourse}
         classId={studyClass.id}
+        onOpenWhiteboard={() => setWhiteboardOpen(true)}
       />
       <UstadWatcher enabled={lectureId === null} />
 
@@ -137,13 +138,6 @@ export default function ClassRoom({
         <h1 className="min-w-0 flex-1 truncate font-display text-sm font-bold text-white sm:text-2xl">
           <span className="text-emerald-300">{studyClass.name}</span>
         </h1>
-        <button
-          type="button"
-          onClick={() => setWhiteboardOpen(true)}
-          className="lift inline-flex shrink-0 items-center gap-1 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs font-medium text-white/80 transition hover:bg-white/10 sm:py-1.5"
-        >
-          🖊️ <span className="hidden sm:inline">Whiteboard</span>
-        </button>
       </header>
 
       <main className="study-grid mx-auto grid min-h-0 w-full max-w-[1600px] flex-1 gap-2 sm:gap-3">

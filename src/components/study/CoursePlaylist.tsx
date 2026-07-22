@@ -22,6 +22,7 @@ export default function CoursePlaylist({
   onPlayLecture,
   initialItems,
   classId,
+  onOpenWhiteboard,
 }: {
   open: boolean;
   onToggle: () => void;
@@ -29,6 +30,8 @@ export default function CoursePlaylist({
   initialItems: CourseItem[];
   /** The class this course belongs to, so a new item is scoped to this room. */
   classId: string;
+  /** When provided, a Whiteboard button is shown grouped next to the Course button. */
+  onOpenWhiteboard?: () => void;
 }) {
   const [items, setItems] = useState<CourseItem[]>(initialItems);
   const [type, setType] = useState<CourseItemType>("youtube");
@@ -134,7 +137,18 @@ export default function CoursePlaylist({
   const progress = items.length > 0 ? Math.round((doneCount / items.length) * 100) : 0;
 
   return (
-    <div className="fixed right-4 top-4 z-50">
+    <div className="fixed right-4 top-4 z-50 flex items-center gap-2">
+      {onOpenWhiteboard && (
+        <button
+          type="button"
+          onClick={onOpenWhiteboard}
+          aria-label="Whiteboard"
+          className="lift glass-strong flex h-11 items-center gap-1 rounded-full border border-transparent px-3 text-emerald-200 shadow-md transition hover:text-white"
+        >
+          <span className="text-lg">🖊️</span>
+          <span className="hidden text-xs font-medium sm:inline">Whiteboard</span>
+        </button>
+      )}
       <button
         type="button"
         onClick={onToggle}
