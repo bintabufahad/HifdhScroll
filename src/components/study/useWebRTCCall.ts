@@ -45,8 +45,6 @@ export function useWebRTCCall(room: string | null, displayName: string | undefin
   const [tiles, setTiles] = useState<CallTile[]>([]);
   const [micOn, setMicOn] = useState(true);
   const [camOn, setCamOn] = useState(true);
-  // A stable event bus for whiteboard messages received over the channel.
-  const [whiteboardBus] = useState<EventTarget>(() => new EventTarget());
 
   const myIdRef = useRef<string>("");
   const localStreamRef = useRef<MediaStream | null>(null);
@@ -186,9 +184,6 @@ export function useWebRTCCall(room: string | null, displayName: string | undefin
       channelRef.current = channel;
 
       channel.on("broadcast", { event: "signal" }, ({ payload }) => handleSignal(payload as SignalPayload));
-      channel.on("broadcast", { event: "wb" }, ({ payload }) => {
-        whiteboardBus.dispatchEvent(new CustomEvent("wb", { detail: payload }));
-      });
       channel.on("presence", { event: "sync" }, () => {
         const state = channel.presenceState<{ name?: string }>();
         const ids = Object.keys(state);
@@ -233,7 +228,7 @@ export function useWebRTCCall(room: string | null, displayName: string | undefin
       if (ch) supabase.removeChannel(ch);
       setTiles([]);
     };
-  }, [room, rebuildTiles, whiteboardBus]);
+  }, [room, rebuildTiles]);
 
   const toggleMic = useCallback(() => {
     const s = localStreamRef.current;
@@ -251,9 +246,5 @@ export function useWebRTCCall(room: string | null, displayName: string | undefin
     setCamOn(on);
   }, []);
 
-  const sendWhiteboard = useCallback((data: unknown) => {
-    channelRef.current?.send({ type: "broadcast", event: "wb", payload: data });
-  }, []);
-
-  return { tiles, micOn, camOn, toggleMic, toggleCam, whiteboardBus, sendWhiteboard };
+  return { tiles, micOn, camOn, toggleMic, toggleCam };
 }

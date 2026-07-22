@@ -1,32 +1,38 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 /**
- * A shared whiteboard for everyone in the class call. Strokes are broadcast over
- * the same Supabase Realtime channel the call uses (normalised 0..1 coordinates
- * so every participant sees the same drawing regardless of screen size). Late
- * joiners see strokes from when they open it - no history replay.
+ * A shared, persistent whiteboard. Live drawing is broadcast over the class
+ * Realtime channel (per-segment, for smoothness); each completed stroke is also
+ * saved to Supabase, so anyone who opens the board later loads everything drawn
+ * so far. Normalised 0..1 coordinates keep it identical across screen sizes.
  */
 
 const COLORS = ["#111827", "#2563eb", "#dc2626", "#059669", "#d97706"];
 
+type Point = { x: number; y: number };
 type WbMessage =
   | { wb: "stroke"; x0: number; y0: number; x1: number; y1: number; color: string }
   | { wb: "clear" };
+type StoredStroke = { points: Point[]; color: string };
 
 export default function Whiteboard({
+  classId,
   bus,
   send,
   onClose,
 }: {
+  classId: string;
   bus: EventTarget | null;
   send: (data: unknown) => void;
   onClose: () => void;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const drawing = useRef(false);
-  const last = useRef<{ x: number; y: number } | null>(null);
+  const last = useRef<Point | null>(null);
+  const pathRef = useRef<Point[]>([]);
   const [color, setColor] = useState(COLORS[0]);
   const colorRef = useRef(color);
   useEffect(() => {
@@ -40,10 +46,17 @@ export default function Whiteboard({
     ctx.strokeStyle = c;
     ctx.lineWidth = 3;
     ctx.lineCap = "round";
+    ctx.lineJoin = "round";
     ctx.beginPath();
     ctx.moveTo(x0 * canvas.width, y0 * canvas.height);
     ctx.lineTo(x1 * canvas.width, y1 * canvas.height);
     ctx.stroke();
+  }
+
+  function drawStroke(s: StoredStroke) {
+    for (let i = 1; i < s.points.length; i++) {
+      paint(s.points[i - 1].x, s.points[i - 1].y, s.points[i].x, s.points[i].y, s.color);
+    }
   }
 
   function clearBoard() {
@@ -52,19 +65,33 @@ export default function Whiteboard({
     if (canvas && ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
   }
 
+  // Size the canvas, then load and draw the saved history.
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const resize = () => {
-      const rect = canvas.getBoundingClientRect();
-      canvas.width = rect.width;
-      canvas.height = rect.height;
-    };
-    resize();
-    window.addEventListener("resize", resize);
-    return () => window.removeEventListener("resize", resize);
-  }, []);
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width;
+    canvas.height = rect.height;
 
+    let cancelled = false;
+    (async () => {
+      const supabase = createClient();
+      const { data } = await supabase
+        .from("whiteboard_strokes")
+        .select("payload")
+        .eq("class_id", classId)
+        .order("created_at", { ascending: true });
+      if (cancelled || !data) return;
+      for (const row of data) drawStroke((row as { payload: StoredStroke }).payload);
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // drawStroke/paint are stable within a render; we only reload on class change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [classId]);
+
+  // Live updates from other participants.
   useEffect(() => {
     if (!bus) return;
     const handler = (e: Event) => {
@@ -77,7 +104,7 @@ export default function Whiteboard({
     return () => bus.removeEventListener("wb", handler);
   }, [bus]);
 
-  function pos(e: React.PointerEvent): { x: number; y: number } {
+  function pos(e: React.PointerEvent): Point {
     const canvas = canvasRef.current!;
     const rect = canvas.getBoundingClientRect();
     return { x: (e.clientX - rect.left) / rect.width, y: (e.clientY - rect.top) / rect.height };
@@ -85,7 +112,9 @@ export default function Whiteboard({
 
   function onDown(e: React.PointerEvent) {
     drawing.current = true;
-    last.current = pos(e);
+    const p = pos(e);
+    last.current = p;
+    pathRef.current = [p];
   }
   function onMove(e: React.PointerEvent) {
     if (!drawing.current || !last.current) return;
@@ -94,15 +123,24 @@ export default function Whiteboard({
     paint(last.current.x, last.current.y, p.x, p.y, c);
     send({ wb: "stroke", x0: last.current.x, y0: last.current.y, x1: p.x, y1: p.y, color: c });
     last.current = p;
+    pathRef.current.push(p);
   }
-  function onUp() {
+  async function onUp() {
     drawing.current = false;
     last.current = null;
+    const points = pathRef.current;
+    pathRef.current = [];
+    if (points.length < 2) return;
+    // Persist the completed stroke so late joiners can load it.
+    const supabase = createClient();
+    await supabase.from("whiteboard_strokes").insert({ class_id: classId, payload: { points, color: colorRef.current } });
   }
 
-  function clearAll() {
+  async function clearAll() {
     clearBoard();
     send({ wb: "clear" });
+    const supabase = createClient();
+    await supabase.from("whiteboard_strokes").delete().eq("class_id", classId);
   }
 
   return (
@@ -115,7 +153,7 @@ export default function Whiteboard({
               type="button"
               onClick={() => setColor(c)}
               aria-label={`Colour ${c}`}
-              className={`h-6 w-6 rounded-full border-2 transition ${color === c ? "border-white" : "border-transparent"}`}
+              className={`h-6 w-6 rounded-full border-2 transition ${color === c ? "border-white" : "border-white/20"}`}
               style={{ backgroundColor: c }}
             />
           ))}
@@ -145,11 +183,6 @@ export default function Whiteboard({
           className="h-full w-full touch-none"
         />
       </div>
-      {!bus && (
-        <p className="pb-3 text-center text-xs text-white/50">
-          Start or join the group call to draw together in real time.
-        </p>
-      )}
     </div>
   );
 }

@@ -12,6 +12,7 @@ import VideoGrid from "./VideoGrid";
 import Whiteboard from "./Whiteboard";
 import { useCamera } from "./useCamera";
 import { useWebRTCCall } from "./useWebRTCCall";
+import { useClassSync } from "./useClassSync";
 import type { CourseItem, StudyClass, StudyTask } from "@/lib/types";
 
 export default function ClassRoom({
@@ -28,13 +29,14 @@ export default function ClassRoom({
   isOwner: boolean;
 }) {
   const [toast, setToast] = useState("");
-  const [lectureId, setLectureId] = useState<string | null>(null);
   const [courseOpen, setCourseOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [whiteboardOpen, setWhiteboardOpen] = useState(false);
   // "camera" = just your own camera. "call" = the live peer-to-peer group call.
   const [mode, setMode] = useState<"camera" | "call">(isOwner ? "camera" : "call");
   const camera = useCamera();
+  // Lecture + whiteboard sync for everyone in the class (persistent channel).
+  const sync = useClassSync(studyClass.room, displayName);
 
   function flashToast(msg: string) {
     setToast(msg);
@@ -88,14 +90,14 @@ export default function ClassRoom({
         open={courseOpen}
         onToggle={() => setCourseOpen((v) => !v)}
         onPlayLecture={(id) => {
-          setLectureId(id);
+          sync.setLecture({ videoId: id, playing: true, time: 0, at: Date.now() });
           setCourseOpen(false);
         }}
         initialItems={initialCourse}
         classId={studyClass.id}
         onOpenWhiteboard={() => setWhiteboardOpen(true)}
       />
-      <UstadWatcher enabled={lectureId === null} />
+      <UstadWatcher enabled={sync.lecture.videoId === null} />
 
       {toast && (
         <div className="animate-rise-in fixed left-1/2 top-3 z-50 -translate-x-1/2">
@@ -125,7 +127,7 @@ export default function ClassRoom({
 
         {/* Lecture */}
         <div className="area-lecture min-h-0 min-w-0">
-          <MainStage lectureId={lectureId} onSetLecture={setLectureId} onClear={() => setLectureId(null)} />
+          <MainStage lecture={sync.lecture} onLecture={sync.setLecture} />
         </div>
 
         {/* Camera panel — the call replaces ONLY this panel. */}
@@ -179,7 +181,12 @@ export default function ClassRoom({
       </main>
 
       {whiteboardOpen && (
-        <Whiteboard bus={call.whiteboardBus} send={call.sendWhiteboard} onClose={() => setWhiteboardOpen(false)} />
+        <Whiteboard
+          classId={studyClass.id}
+          bus={sync.whiteboardBus}
+          send={sync.sendWhiteboard}
+          onClose={() => setWhiteboardOpen(false)}
+        />
       )}
     </div>
   );
