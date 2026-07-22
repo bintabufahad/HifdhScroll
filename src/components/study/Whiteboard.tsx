@@ -9,7 +9,7 @@ import { useEffect, useRef, useState } from "react";
  * joiners see strokes from when they open it - no history replay.
  */
 
-const COLORS = ["#10b981", "#f4efe3", "#e3b341", "#ef4444", "#60a5fa"];
+const COLORS = ["#111827", "#2563eb", "#dc2626", "#059669", "#d97706"];
 
 type WbMessage =
   | { wb: "stroke"; x0: number; y0: number; x1: number; y1: number; color: string }
@@ -107,8 +107,7 @@ export default function Whiteboard({
 
   return (
     <div className="fixed inset-0 z-[70] flex flex-col bg-black/70 backdrop-blur">
-      <div className="flex shrink-0 items-center justify-between gap-2 px-4 py-3">
-        <span className="font-display text-sm font-semibold text-emerald-300">Shared whiteboard</span>
+      <div className="flex shrink-0 items-center justify-end gap-2 px-4 py-3">
         <div className="flex items-center gap-2">
           {COLORS.map((c) => (
             <button
@@ -136,7 +135,7 @@ export default function Whiteboard({
           </button>
         </div>
       </div>
-      <div className="mx-3 mb-3 min-h-0 flex-1 overflow-hidden rounded-2xl bg-[#0c1512] ring-1 ring-white/10">
+      <div className="mx-3 mb-3 min-h-0 flex-1 overflow-hidden rounded-2xl bg-white ring-1 ring-white/10">
         <canvas
           ref={canvasRef}
           onPointerDown={onDown}

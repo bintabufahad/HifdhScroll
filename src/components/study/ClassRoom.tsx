@@ -78,6 +78,11 @@ export default function ClassRoom({
     await shareLink();
   }
 
+  async function joinCall() {
+    if (camera.cameraOn) await camera.toggleCamera();
+    setMode("call");
+  }
+
   return (
     <div className="bg-app-dark relative flex h-[100dvh] flex-col overflow-hidden px-2 py-2 sm:px-4 sm:py-3">
       <CoursePlaylist
@@ -130,23 +135,25 @@ export default function ClassRoom({
             <>
               <button
                 type="button"
-                onClick={inviteFriends}
+                onClick={isOwner ? inviteFriends : joinCall}
                 className="lift absolute right-3 top-3 z-10 inline-flex items-center gap-1 rounded-full border border-emerald-400/40 bg-black/60 px-3 py-1.5 text-xs font-semibold text-emerald-100 backdrop-blur transition hover:bg-black/80"
               >
-                👥 Invite friends
+                {isOwner ? "👥 Invite friends" : "📹 Join call"}
               </button>
               <CameraView camera={camera} big />
             </>
           ) : (
             <>
               <div className="absolute right-3 top-3 z-10 flex gap-1.5">
-                <button
-                  type="button"
-                  onClick={shareLink}
-                  className="lift inline-flex items-center gap-1 rounded-full border border-emerald-400/40 bg-black/60 px-3 py-1.5 text-xs font-semibold text-emerald-100 backdrop-blur transition hover:bg-black/80"
-                >
-                  {copied ? "✓ Copied" : "🔗 Invite"}
-                </button>
+                {isOwner && (
+                  <button
+                    type="button"
+                    onClick={shareLink}
+                    className="lift inline-flex items-center gap-1 rounded-full border border-emerald-400/40 bg-black/60 px-3 py-1.5 text-xs font-semibold text-emerald-100 backdrop-blur transition hover:bg-black/80"
+                  >
+                    {copied ? "✓ Copied" : "🔗 Invite"}
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => setMode("camera")}

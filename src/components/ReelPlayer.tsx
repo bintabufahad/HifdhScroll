@@ -158,7 +158,7 @@ export default function ReelPlayer({
         tabIndex={0}
         onClick={togglePlay}
         onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && togglePlay()}
-        className="relative z-10 flex min-h-0 flex-1 flex-col overflow-y-auto px-6 py-4 text-center"
+        className="relative z-10 flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-6 py-4 text-center"
       >
         {/* min-h-full + justify-center centres the ayah when it fits, but lets a
             tall ayah scroll from the TOP instead of being clipped above centre -
@@ -183,13 +183,16 @@ export default function ReelPlayer({
             <div key={index} className="flex w-full flex-col items-center gap-3" style={{ animation: "rise 0.45s ease" }}>
               {current.bismillah && (
                 <div className="rounded-xl border border-amber-200/60 bg-black/35 px-4 py-2">
-                  <p dir="rtl" className="font-arabic text-xl leading-[2] text-amber-100 sm:text-2xl">
+                  <p dir="rtl" className="font-arabic text-xl leading-[2] text-amber-100 sm:text-2xl landscape:text-lg sm:landscape:text-xl">
                     {current.bismillah}
                   </p>
                 </div>
               )}
               {current.arabic && (
-                <p dir="rtl" className="font-arabic pt-2 text-2xl leading-[2.35] text-white drop-shadow-lg sm:text-3xl">
+                <p
+                  dir="rtl"
+                  className="font-arabic pt-2 text-2xl leading-[2.3] text-white drop-shadow-lg sm:text-3xl landscape:text-xl landscape:leading-[2.05] sm:landscape:text-2xl sm:landscape:leading-[2.2]"
+                >
                   {current.arabic}
                   <span className="text-amber-200"> ﴿{toArabicNumerals(current.numberInSurah)}﴾</span>
                 </p>

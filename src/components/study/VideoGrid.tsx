@@ -47,9 +47,10 @@ export default function VideoGrid({
   onToggleCam: () => void;
 }) {
   const n = tiles.length;
-  // Match the reference screenshots: <=2 side-by-side, 3-4 a 2-wide grid,
-  // 5+ a 3-wide grid.
-  const cols = n <= 1 ? 1 : n <= 4 ? 2 : 3;
+  // Match the reference screenshots (and the narrow camera panel on every
+  // device): solo fills the frame; 2 sit side-by-side; 3-4 make a 2x2; 5+ keep
+  // two columns and grow downward (2x3, …).
+  const cols = n <= 1 ? 1 : 2;
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-1.5">
