@@ -19,6 +19,18 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const room = searchParams.get("room") || "";
 
+  // Preferred: your own self-hosted Jitsi (unlimited, free, no login, no time
+  // limit). Anonymous access is on by default there, so no token is needed.
+  const selfHosted = process.env.JITSI_SELF_HOSTED_DOMAIN;
+  if (selfHosted) {
+    return NextResponse.json({
+      scriptUrl: `https://${selfHosted}/external_api.js`,
+      domain: selfHosted,
+      roomName: room,
+      jwt: null,
+    });
+  }
+
   const appId = process.env.JAAS_APP_ID;
   const kid = process.env.JAAS_KID;
   const privateKey = process.env.JAAS_PRIVATE_KEY?.replace(/\\n/g, "\n");
