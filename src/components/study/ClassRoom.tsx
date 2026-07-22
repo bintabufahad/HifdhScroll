@@ -27,7 +27,6 @@ export default function ClassRoom({
   displayName?: string;
   isOwner: boolean;
 }) {
-  const [tasks, setTasks] = useState(initialTasks);
   const [toast, setToast] = useState("");
   const [lectureId, setLectureId] = useState<string | null>(null);
   const [courseOpen, setCourseOpen] = useState(false);
@@ -175,7 +174,7 @@ export default function ClassRoom({
 
         {/* Planner / to-do */}
         <div className="area-planner flex min-h-0 min-w-0 flex-col">
-          <TaskList tasks={tasks} onTasksChange={setTasks} classId={studyClass.id} fill />
+          <TaskList initialTasks={initialTasks} classId={studyClass.id} fill />
         </div>
       </main>
 

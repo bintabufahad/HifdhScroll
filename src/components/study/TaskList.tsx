@@ -1,24 +1,63 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { StudyTask } from "@/lib/types";
 
+/**
+ * The class to-do list, shared live across everyone in the class. Local edits go
+ * straight to Supabase; a Realtime subscription keeps every participant's list in
+ * sync (adds, completes, deletes) - including people who join later, who load the
+ * current list from the server.
+ */
 export default function TaskList({
-  tasks,
-  onTasksChange,
+  initialTasks,
   classId,
   fill = false,
 }: {
-  tasks: StudyTask[];
-  onTasksChange: (tasks: StudyTask[]) => void;
-  /** The class these tasks belong to, so a new task is scoped to this room. */
+  initialTasks: StudyTask[];
   classId: string;
-  /** When true, the card fills its parent's height and the list scrolls inside. */
   fill?: boolean;
 }) {
+  const [tasks, setTasks] = useState<StudyTask[]>(initialTasks);
   const [title, setTitle] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  // Live sync: reflect inserts/updates/deletes from anyone in the class.
+  useEffect(() => {
+    const supabase = createClient();
+    const channel = supabase
+      .channel(`tasks:${classId}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "study_tasks", filter: `class_id=eq.${classId}` },
+        (payload) => {
+          const t = payload.new as StudyTask;
+          setTasks((prev) => (prev.some((x) => x.id === t.id) ? prev : [...prev, t]));
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "study_tasks", filter: `class_id=eq.${classId}` },
+        (payload) => {
+          const t = payload.new as StudyTask;
+          setTasks((prev) => prev.map((x) => (x.id === t.id ? { ...x, ...t } : x)));
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "study_tasks", filter: `class_id=eq.${classId}` },
+        (payload) => {
+          const old = payload.old as { id: string };
+          setTasks((prev) => prev.filter((x) => x.id !== old.id));
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [classId]);
 
   async function addTask(e: React.FormEvent) {
     e.preventDefault();
@@ -44,31 +83,28 @@ export default function TaskList({
     setSubmitting(false);
     if (!error && data) {
       setTitle("");
-      onTasksChange([...tasks, data as StudyTask]);
+      setTasks((prev) => (prev.some((x) => x.id === (data as StudyTask).id) ? prev : [...prev, data as StudyTask]));
     }
   }
 
   async function toggleTask(task: StudyTask) {
-    const supabase = createClient();
     const nextDone = !task.is_done;
-    const { error } = await supabase
+    setTasks((prev) =>
+      prev.map((t) =>
+        t.id === task.id ? { ...t, is_done: nextDone, completed_at: nextDone ? new Date().toISOString() : null } : t
+      )
+    );
+    const supabase = createClient();
+    await supabase
       .from("study_tasks")
       .update({ is_done: nextDone, completed_at: nextDone ? new Date().toISOString() : null })
       .eq("id", task.id);
-
-    if (!error) {
-      onTasksChange(
-        tasks.map((t) => (t.id === task.id ? { ...t, is_done: nextDone, completed_at: nextDone ? new Date().toISOString() : null } : t))
-      );
-    }
   }
 
   async function deleteTask(id: string) {
+    setTasks((prev) => prev.filter((t) => t.id !== id));
     const supabase = createClient();
-    const { error } = await supabase.from("study_tasks").delete().eq("id", id);
-    if (!error) {
-      onTasksChange(tasks.filter((t) => t.id !== id));
-    }
+    await supabase.from("study_tasks").delete().eq("id", id);
   }
 
   const doneCount = tasks.filter((t) => t.is_done).length;

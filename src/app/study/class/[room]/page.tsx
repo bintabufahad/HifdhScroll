@@ -34,7 +34,6 @@ export default async function ClassRoomPage({ params }: { params: Promise<{ room
     supabase
       .from("study_tasks")
       .select("id, title, is_done, created_at, completed_at")
-      .eq("user_id", user.id)
       .eq("class_id", classId)
       .order("created_at", { ascending: true }),
     supabase
