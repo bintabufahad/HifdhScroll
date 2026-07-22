@@ -3,12 +3,17 @@
 import { useEffect, useRef } from "react";
 
 /**
- * Embeds a free Jitsi Meet room (up to ~6 people comfortably) into the class.
- * Whiteboard and screen sharing come built into Jitsi's toolbar, so a "class"
- * gets group video + whiteboard + screen share with no backend of our own.
+ * Embeds the class group call. It asks the server (/api/call-token) how to
+ * connect:
+ *  - With JaaS configured, the server returns an 8x8.vc domain + a signed JWT,
+ *    so every participant is authenticated automatically and NO ONE ever sees a
+ *    Jitsi login screen.
+ *  - Otherwise it returns the free public meet.jit.si (guests join via the link;
+ *    only the meeting starter might be prompted).
+ * If the lookup or the chosen server fails to load, it falls back to meet.jit.si
+ * so the call still works.
  *
- * Uses the public meet.jit.si server (free, no account). The room name is the
- * class's unique slug, so everyone who opens the same class link lands together.
+ * Whiteboard + screen sharing come built into Jitsi's toolbar either way.
  */
 
 type JitsiApi = {
@@ -24,8 +29,38 @@ declare global {
   }
 }
 
-const JITSI_DOMAIN = "meet.jit.si";
-const SCRIPT_ID = "jitsi-external-api";
+interface CallConfig {
+  scriptUrl: string;
+  domain: string;
+  roomName: string;
+  jwt: string | null;
+}
+
+const PUBLIC_FALLBACK = (room: string): CallConfig => ({
+  scriptUrl: "https://meet.jit.si/external_api.js",
+  domain: "meet.jit.si",
+  roomName: room,
+  jwt: null,
+});
+
+function loadScript(src: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (window.JitsiMeetExternalAPI) return resolve();
+    const existing = document.querySelector<HTMLScriptElement>(`script[data-jitsi="${src}"]`);
+    if (existing) {
+      existing.addEventListener("load", () => resolve());
+      existing.addEventListener("error", () => reject(new Error("script error")));
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = src;
+    script.async = true;
+    script.dataset.jitsi = src;
+    script.addEventListener("load", () => resolve());
+    script.addEventListener("error", () => reject(new Error("script error")));
+    document.body.appendChild(script);
+  });
+}
 
 export default function JitsiRoom({
   room,
@@ -39,8 +74,6 @@ export default function JitsiRoom({
 }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const apiRef = useRef<JitsiApi | null>(null);
-  // Keep the latest onClose in a ref so re-renders don't tear down and rebuild
-  // the whole call (which would happen if onClose were an effect dependency).
   const onCloseRef = useRef(onClose);
   useEffect(() => {
     onCloseRef.current = onClose;
@@ -49,10 +82,11 @@ export default function JitsiRoom({
   useEffect(() => {
     let cancelled = false;
 
-    function init() {
+    function build(cfg: CallConfig) {
       if (cancelled || !containerRef.current || !window.JitsiMeetExternalAPI) return;
-      const api = new window.JitsiMeetExternalAPI(JITSI_DOMAIN, {
-        roomName: room,
+      const api = new window.JitsiMeetExternalAPI(cfg.domain, {
+        roomName: cfg.roomName,
+        jwt: cfg.jwt || undefined,
         parentNode: containerRef.current,
         width: "100%",
         height: "100%",
@@ -70,38 +104,39 @@ export default function JitsiRoom({
         },
       });
       apiRef.current = api;
-      // Tile view shows every participant equally: alone you fill the frame, and
-      // as soon as someone joins your tile shrinks to make room for theirs.
-      api.addListener?.("videoConferenceJoined", () => {
-        api.executeCommand?.("setTileView", true);
-      });
-      api.addListener?.("participantJoined", () => {
-        api.executeCommand?.("setTileView", true);
-      });
-      // When the user hangs up (or the room closes), return to the camera view.
+      // Tile view: alone you fill the frame; as others join your tile shrinks.
+      const tile = () => api.executeCommand?.("setTileView", true);
+      api.addListener?.("videoConferenceJoined", tile);
+      api.addListener?.("participantJoined", tile);
       api.addListener?.("readyToClose", () => onCloseRef.current?.());
       api.addListener?.("videoConferenceLeft", () => onCloseRef.current?.());
     }
 
-    function ensureScript() {
-      if (window.JitsiMeetExternalAPI) {
-        init();
-        return;
+    async function start() {
+      let cfg: CallConfig;
+      try {
+        const res = await fetch(`/api/call-token?room=${encodeURIComponent(room)}`);
+        cfg = res.ok ? await res.json() : PUBLIC_FALLBACK(room);
+      } catch {
+        cfg = PUBLIC_FALLBACK(room);
       }
-      const existing = document.getElementById(SCRIPT_ID) as HTMLScriptElement | null;
-      if (existing) {
-        existing.addEventListener("load", init);
-        return;
+      if (cancelled) return;
+      try {
+        await loadScript(cfg.scriptUrl);
+        build(cfg);
+      } catch {
+        // The chosen server's script failed - fall back to the public one.
+        if (cancelled) return;
+        try {
+          await loadScript(PUBLIC_FALLBACK(room).scriptUrl);
+          build(PUBLIC_FALLBACK(room));
+        } catch {
+          /* give up quietly */
+        }
       }
-      const script = document.createElement("script");
-      script.id = SCRIPT_ID;
-      script.src = `https://${JITSI_DOMAIN}/external_api.js`;
-      script.async = true;
-      script.addEventListener("load", init);
-      document.body.appendChild(script);
     }
 
-    ensureScript();
+    start();
 
     return () => {
       cancelled = true;

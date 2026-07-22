@@ -143,40 +143,50 @@ export default function StudyHub({ initialClasses }: { initialClasses: StudyClas
         <div className="mx-auto w-full max-w-4xl">
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
             {classes.map((c) => (
-              <div
-                key={c.id}
-                className="glass lift group relative flex aspect-square flex-col justify-between rounded-2xl p-4 transition hover:bg-white/[0.06]"
-              >
+              <div key={c.id} className="group relative">
+                <Link
+                  href={`/study/class/${c.room}`}
+                  className="flex aspect-square flex-col overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.015] p-4 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-emerald-400/40 hover:from-emerald-500/[0.12] hover:to-white/[0.02] hover:shadow-[0_14px_34px_-14px_rgba(16,185,129,0.55)]"
+                >
+                  <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-500/15 text-xl ring-1 ring-emerald-400/20 transition duration-300 group-hover:bg-emerald-500/25 group-hover:ring-emerald-400/40">
+                    📚
+                  </span>
+                  <span
+                    className="mt-auto line-clamp-2 font-display font-semibold leading-tight text-white"
+                    title={c.name}
+                  >
+                    {c.name}
+                  </span>
+                  <span className="mt-1.5 flex items-center gap-1 text-xs font-medium text-emerald-300/90">
+                    Enter
+                    <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
+                  </span>
+                </Link>
                 <button
                   type="button"
                   onClick={() => deleteClass(c.id)}
                   aria-label="Delete class"
-                  className="absolute right-2 top-2 text-white/30 opacity-0 transition hover:text-red-300 group-hover:opacity-100"
+                  className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-black/40 text-xs text-white/40 opacity-0 backdrop-blur transition hover:bg-red-500/20 hover:text-red-300 group-hover:opacity-100"
                 >
                   ✕
                 </button>
-                <Link href={`/study/class/${c.room}`} className="flex flex-1 flex-col justify-between">
-                  <span className="text-2xl">📚</span>
-                  <span className="mt-2 line-clamp-2 font-display font-semibold text-white" title={c.name}>
-                    {c.name}
-                  </span>
-                  <span className="mt-1 text-xs text-emerald-300">Enter →</span>
-                </Link>
               </div>
             ))}
 
             {/* Create-another tile */}
-            <div className="flex aspect-square items-center justify-center rounded-2xl border-2 border-dashed border-white/12">
+            <div className="flex aspect-square items-center justify-center rounded-2xl">
               {showForm ? (
-                <div className="w-full px-2">{createForm}</div>
+                <div className="glass w-full rounded-2xl px-2 py-3">{createForm}</div>
               ) : (
                 <button
                   type="button"
                   onClick={() => setShowForm(true)}
                   aria-label="Create a new class"
-                  className="lift flex h-full w-full flex-col items-center justify-center gap-1 text-emerald-300 transition hover:bg-emerald-500/5"
+                  className="group flex h-full w-full flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-white/12 text-emerald-300/90 transition-all duration-300 hover:-translate-y-1 hover:border-emerald-400/50 hover:bg-emerald-500/[0.06] hover:text-emerald-200"
                 >
-                  <span className="text-4xl font-light">+</span>
+                  <span className="flex h-11 w-11 items-center justify-center rounded-full border border-emerald-400/30 text-2xl font-light transition-transform duration-300 group-hover:scale-110">
+                    +
+                  </span>
                   <span className="text-xs font-medium">New class</span>
                 </button>
               )}
