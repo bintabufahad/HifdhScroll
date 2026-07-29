@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { extractYouTubeId } from "@/lib/youtube";
+import { extractYouTubeId, extractYouTubePlaylistId } from "@/lib/youtube";
 import { EMPTY_LECTURE, type LectureState } from "./useClassSync";
 
 interface YTPlayer {
@@ -9,13 +9,14 @@ interface YTPlayer {
   pauseVideo(): void;
   seekTo(seconds: number, allowSeekAhead: boolean): void;
   loadVideoById(id: string, startSeconds?: number): void;
+  loadPlaylist(opts: { list: string; listType: string; index?: number; startSeconds?: number }): void;
   getCurrentTime(): number;
   getPlayerState(): number;
   destroy(): void;
 }
 interface YTPlayerOptions {
-  videoId: string;
-  playerVars?: Record<string, number>;
+  videoId?: string;
+  playerVars?: Record<string, string | number>;
   events?: { onReady?: () => void; onStateChange?: (e: { data: number }) => void };
 }
 interface YTNamespace {
@@ -57,9 +58,9 @@ function liveTime(l: LectureState): number {
 }
 
 /**
- * The lecture region. The video is synchronised for everyone in the class: any
- * play, pause or seek is broadcast (via onLecture), and remote changes are
- * applied to this player. Uses the YouTube IFrame API so we can control it.
+ * The lecture region. A single video OR a whole YouTube playlist (navigable via
+ * the player's own controls). Playback is synchronised for everyone in the class
+ * via the YouTube IFrame API - play/pause/seek broadcast and applied.
  */
 export default function MainStage({
   lecture,
@@ -80,10 +81,12 @@ export default function MainStage({
     lectureRef.current = lecture;
   }, [lecture]);
 
-  // Create (or reload) the player when the video changes.
+  const hasLecture = !!lecture.videoId || !!lecture.list;
+
+  // Create (or reload) the player when the video/playlist changes.
   useEffect(() => {
-    const videoId = lecture.videoId;
-    if (!videoId) {
+    const { videoId, list } = lecture;
+    if (!videoId && !list) {
       playerRef.current?.destroy();
       playerRef.current = null;
       return;
@@ -95,7 +98,8 @@ export default function MainStage({
 
       if (playerRef.current) {
         applyingRef.current = true;
-        playerRef.current.loadVideoById(videoId, liveTime(lectureRef.current));
+        if (list) playerRef.current.loadPlaylist({ list, listType: "playlist" });
+        else if (videoId) playerRef.current.loadVideoById(videoId, liveTime(lectureRef.current));
         window.setTimeout(() => (applyingRef.current = false), 900);
         return;
       }
@@ -103,23 +107,33 @@ export default function MainStage({
       const holder = document.createElement("div");
       hostRef.current.innerHTML = "";
       hostRef.current.appendChild(holder);
+      const playerVars: Record<string, string | number> = { playsinline: 1, rel: 0, modestbranding: 1 };
+      if (list) {
+        playerVars.listType = "playlist";
+        playerVars.list = list;
+        playerVars.autoplay = 1;
+      } else {
+        playerVars.autoplay = lectureRef.current.playing ? 1 : 0;
+      }
       playerRef.current = new window.YT.Player(holder, {
-        videoId,
-        playerVars: { autoplay: lectureRef.current.playing ? 1 : 0, playsinline: 1, rel: 0, modestbranding: 1 },
+        ...(list ? {} : { videoId: videoId ?? undefined }),
+        playerVars,
         events: {
           onReady: () => {
             applyingRef.current = true;
-            playerRef.current?.seekTo(liveTime(lectureRef.current), true);
-            if (lectureRef.current.playing) playerRef.current?.playVideo();
-            else playerRef.current?.pauseVideo();
+            if (!list) {
+              playerRef.current?.seekTo(liveTime(lectureRef.current), true);
+              if (lectureRef.current.playing) playerRef.current?.playVideo();
+              else playerRef.current?.pauseVideo();
+            }
             window.setTimeout(() => (applyingRef.current = false), 900);
           },
           onStateChange: (e) => {
             if (applyingRef.current) return;
-            // 1 = playing, 2 = paused
             if (e.data === 1 || e.data === 2) {
               onLecture({
                 videoId: lectureRef.current.videoId,
+                list: lectureRef.current.list,
                 playing: e.data === 1,
                 time: playerRef.current?.getCurrentTime() ?? 0,
                 at: Date.now(),
@@ -133,12 +147,12 @@ export default function MainStage({
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lecture.videoId]);
+  }, [lecture.videoId, lecture.list]);
 
-  // Apply remote play/pause/seek to an existing player.
+  // Apply remote play/pause/seek to an existing player (single-video lectures).
   useEffect(() => {
     const p = playerRef.current;
-    if (!p || !lecture.videoId) return;
+    if (!p || lecture.list || !lecture.videoId) return;
     applyingRef.current = true;
     const target = liveTime(lecture);
     if (Math.abs((p.getCurrentTime?.() ?? 0) - target) > 1.5) p.seekTo(target, true);
@@ -151,15 +165,16 @@ export default function MainStage({
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
+    const list = extractYouTubePlaylistId(input);
     const id = extractYouTubeId(input);
-    if (!id) {
+    if (!id && !list) {
       setError("That doesn't look like a YouTube link. Paste a full youtube.com or youtu.be URL.");
       return;
     }
     setError("");
     setInput("");
     setShowInput(false);
-    onLecture({ videoId: id, playing: true, time: 0, at: Date.now() });
+    onLecture({ videoId: list ? null : id, list: list ?? null, playing: true, time: 0, at: Date.now() });
   }
 
   return (
@@ -174,47 +189,51 @@ export default function MainStage({
             onClick={() => setShowInput((v) => !v)}
             className="rounded-full bg-emerald-500/90 px-2 py-1 text-[10px] font-medium text-emerald-950 transition hover:bg-emerald-400 sm:px-3 sm:text-xs"
           >
-            {lecture.videoId ? "Change" : "▶ Add lecture"}
+            {hasLecture ? "Change" : "▶ Add lecture"}
           </button>
-          {lecture.videoId && (
-            <button
-              type="button"
-              onClick={() => onLecture({ ...EMPTY_LECTURE })}
-              className="rounded-full bg-white/10 px-2 py-1 text-[10px] font-medium text-white/80 transition hover:bg-white/20 sm:text-xs"
-              aria-label="Remove lecture"
-            >
-              ✕
-            </button>
-          )}
 
           {showInput && (
             <form
               onSubmit={submit}
               className="absolute right-0 top-9 z-10 flex w-64 flex-col gap-2 rounded-lg border border-white/12 bg-[#0c1512] p-2 shadow-xl"
             >
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-medium text-white/70">Lecture link</span>
+                <button
+                  type="button"
+                  onClick={() => setShowInput(false)}
+                  aria-label="Close"
+                  className="flex h-5 w-5 items-center justify-center rounded-full text-white/50 hover:bg-white/10 hover:text-white"
+                >
+                  ✕
+                </button>
+              </div>
               <input
                 type="url"
                 autoFocus
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Paste a YouTube lecture link…"
+                placeholder="Paste a YouTube video or playlist link…"
                 className="rounded border border-white/15 bg-white/10 px-2 py-1 text-xs text-white outline-none placeholder:text-white/40"
               />
-              <div className="flex gap-2">
-                <button
-                  type="submit"
-                  className="flex-1 rounded bg-emerald-500 px-2 py-1 text-xs font-medium text-emerald-950 hover:bg-emerald-400"
-                >
-                  Play for everyone
-                </button>
+              <button
+                type="submit"
+                className="rounded bg-emerald-500 px-2 py-1 text-xs font-medium text-emerald-950 hover:bg-emerald-400"
+              >
+                Play for everyone
+              </button>
+              {hasLecture && (
                 <button
                   type="button"
-                  onClick={() => setShowInput(false)}
-                  className="rounded bg-white/10 px-2 py-1 text-xs text-white/80 hover:bg-white/20"
+                  onClick={() => {
+                    onLecture({ ...EMPTY_LECTURE });
+                    setShowInput(false);
+                  }}
+                  className="text-[11px] text-red-300/80 hover:text-red-300"
                 >
-                  Cancel
+                  Remove current lecture
                 </button>
-              </div>
+              )}
               {error && <p className="text-xs text-red-300">{error}</p>}
             </form>
           )}
@@ -222,7 +241,7 @@ export default function MainStage({
       </div>
 
       <div className="relative min-h-0 flex-1 overflow-hidden rounded-xl border border-white/10 bg-black/50">
-        {lecture.videoId ? (
+        {hasLecture ? (
           <div ref={hostRef} className="h-full w-full [&>*]:h-full [&>*]:w-full" />
         ) : (
           <button
@@ -233,7 +252,7 @@ export default function MainStage({
             <span className="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-500/15 text-xl text-emerald-300">
               ▶
             </span>
-            <span className="text-xs text-white/50">Tap to paste a YouTube lecture link and play it here</span>
+            <span className="text-xs text-white/50">Tap to paste a YouTube video or playlist link</span>
           </button>
         )}
       </div>

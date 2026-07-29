@@ -166,7 +166,10 @@ export function useWebRTCCall(room: string | null, displayName: string | undefin
     (async () => {
       let stream: MediaStream;
       try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { width: { ideal: 640 }, height: { ideal: 360 }, frameRate: { ideal: 24 } },
+          audio: true,
+        });
       } catch {
         onErrorRef.current("Allow camera & microphone access to join the call.");
         return;

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { extractYouTubeId } from "@/lib/youtube";
+import { extractYouTubeId, extractYouTubePlaylistId } from "@/lib/youtube";
 import type { CourseItem, CourseItemType } from "@/lib/types";
 
 function thumb(id: string): string {
@@ -26,7 +26,7 @@ export default function CoursePlaylist({
 }: {
   open: boolean;
   onToggle: () => void;
-  onPlayLecture: (id: string) => void;
+  onPlayLecture: (lecture: { videoId: string | null; list: string | null }) => void;
   initialItems: CourseItem[];
   /** The class this course belongs to, so a new item is scoped to this room. */
   classId: string;
@@ -36,6 +36,7 @@ export default function CoursePlaylist({
   const [items, setItems] = useState<CourseItem[]>(initialItems);
   const [type, setType] = useState<CourseItemType>("youtube");
   const [url, setUrl] = useState("");
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [title, setTitle] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -44,49 +45,79 @@ export default function CoursePlaylist({
 
   async function addItem(e: React.FormEvent) {
     e.preventDefault();
-    const trimmed = url.trim();
-    if (!trimmed) return;
-    if (type === "youtube" && !extractYouTubeId(trimmed)) {
-      setError("That doesn't look like a YouTube link.");
-      return;
-    }
-    if (type === "pdf") {
-      try {
-        new URL(trimmed);
-      } catch {
-        setError("Please paste a full PDF link (starting with https://).");
-        return;
-      }
-    }
-
     setError("");
-    setBusy(true);
     const supabase = createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    if (!user) {
+    if (!user) return;
+    const position = items.length > 0 ? Math.max(...items.map((i) => i.position)) + 1 : 0;
+
+    if (type === "youtube") {
+      const trimmed = url.trim();
+      if (!trimmed) return;
+      const isList = !!extractYouTubePlaylistId(trimmed);
+      if (!extractYouTubeId(trimmed) && !isList) {
+        setError("That doesn't look like a YouTube link.");
+        return;
+      }
+      setBusy(true);
+      const { data, error: insErr } = await supabase
+        .from("course_items")
+        .insert({
+          user_id: user.id,
+          class_id: classId,
+          type: "youtube",
+          url: trimmed,
+          title: title.trim() || (isList ? "Playlist" : "Lecture"),
+          position,
+        })
+        .select("id, type, url, title, done, position")
+        .single();
       setBusy(false);
+      if (!insErr && data) {
+        setItems((prev) => [...prev, data as CourseItem]);
+        setUrl("");
+        setTitle("");
+      } else {
+        setError("Couldn't save this. Please try again.");
+      }
       return;
     }
-    const position = items.length > 0 ? Math.max(...items.map((i) => i.position)) + 1 : 0;
+
+    // PDF: upload the chosen file from the device to storage.
+    if (!pdfFile) {
+      setError("Choose a PDF file to upload.");
+      return;
+    }
+    setBusy(true);
+    const safeName = pdfFile.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+    const path = `${classId}/${crypto.randomUUID()}-${safeName}`;
+    const { error: upErr } = await supabase.storage
+      .from("course-pdfs")
+      .upload(path, pdfFile, { contentType: "application/pdf", upsert: false });
+    if (upErr) {
+      setBusy(false);
+      setError("Couldn't upload the PDF. Please try again.");
+      return;
+    }
+    const { data: pub } = supabase.storage.from("course-pdfs").getPublicUrl(path);
     const { data, error: insErr } = await supabase
       .from("course_items")
       .insert({
         user_id: user.id,
         class_id: classId,
-        type,
-        url: trimmed,
-        title: title.trim() || (type === "youtube" ? "Lecture" : "Reading (PDF)"),
+        type: "pdf",
+        url: pub.publicUrl,
+        title: title.trim() || pdfFile.name,
         position,
       })
       .select("id, type, url, title, done, position")
       .single();
-
     setBusy(false);
     if (!insErr && data) {
       setItems((prev) => [...prev, data as CourseItem]);
-      setUrl("");
+      setPdfFile(null);
       setTitle("");
     } else {
       setError("Couldn't save this. Please try again.");
@@ -95,8 +126,9 @@ export default function CoursePlaylist({
 
   function openItem(item: CourseItem) {
     if (item.type === "youtube") {
+      const list = extractYouTubePlaylistId(item.url);
       const id = extractYouTubeId(item.url);
-      if (id) onPlayLecture(id);
+      if (list || id) onPlayLecture({ videoId: list ? null : id, list });
     } else {
       window.open(item.url, "_blank", "noopener,noreferrer");
     }
@@ -167,9 +199,19 @@ export default function CoursePlaylist({
         <div className="animate-rise-in fixed right-3 top-[4.25rem] w-80 rounded-xl border border-white/12 bg-[#0c1512] p-3 shadow-2xl">
           <div className="mb-2 flex items-center justify-between">
             <p className="text-xs font-medium uppercase tracking-widest text-emerald-200/70">Structured course</p>
-            <span className="text-xs text-white/50">
-              {doneCount}/{items.length}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-white/50">
+                {doneCount}/{items.length}
+              </span>
+              <button
+                type="button"
+                onClick={onToggle}
+                aria-label="Close course"
+                className="flex h-6 w-6 items-center justify-center rounded-full text-white/50 transition hover:bg-white/10 hover:text-white"
+              >
+                ✕
+              </button>
+            </div>
           </div>
 
           {items.length > 0 && (
@@ -206,19 +248,31 @@ export default function CoursePlaylist({
               className="rounded-lg border border-white/15 bg-white/5 px-2 py-1.5 text-xs text-white outline-none placeholder:text-white/40 focus:ring-2 focus:ring-emerald-500/50"
             />
             <div className="flex gap-2">
-              <input
-                type="url"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                placeholder={type === "youtube" ? "YouTube link…" : "PDF link…"}
-                className="flex-1 rounded-lg border border-white/15 bg-white/5 px-2 py-1.5 text-xs text-white outline-none placeholder:text-white/40 focus:ring-2 focus:ring-emerald-500/50"
-              />
+              {type === "youtube" ? (
+                <input
+                  type="url"
+                  value={url}
+                  onChange={(e) => setUrl(e.target.value)}
+                  placeholder="YouTube video or playlist link…"
+                  className="flex-1 rounded-lg border border-white/15 bg-white/5 px-2 py-1.5 text-xs text-white outline-none placeholder:text-white/40 focus:ring-2 focus:ring-emerald-500/50"
+                />
+              ) : (
+                <label className="flex flex-1 cursor-pointer items-center truncate rounded-lg border border-white/15 bg-white/5 px-2 py-1.5 text-xs text-white/70 hover:bg-white/10">
+                  <input
+                    type="file"
+                    accept="application/pdf"
+                    className="hidden"
+                    onChange={(e) => setPdfFile(e.target.files?.[0] ?? null)}
+                  />
+                  <span className="truncate">{pdfFile ? pdfFile.name : "📄 Choose PDF from device…"}</span>
+                </label>
+              )}
               <button
                 type="submit"
                 disabled={busy}
                 className="rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-medium text-emerald-950 hover:bg-emerald-400 disabled:opacity-60"
               >
-                Add
+                {busy ? "…" : "Add"}
               </button>
             </div>
             {previewId && (
@@ -260,12 +314,12 @@ export default function CoursePlaylist({
                       className="flex min-w-0 flex-1 items-center gap-2 text-left"
                       title={item.url}
                     >
-                      {ytId ? (
+                      {item.type === "youtube" && ytId ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={thumb(ytId)} alt="" className="h-8 w-12 shrink-0 rounded object-cover" />
                       ) : (
                         <span className="flex h-8 w-12 shrink-0 items-center justify-center rounded bg-white/10 text-sm">
-                          📄
+                          {item.type === "youtube" ? "🎞️" : "📄"}
                         </span>
                       )}
                       <span className={`truncate text-xs ${item.done ? "text-white/40 line-through" : "text-white/85"}`}>

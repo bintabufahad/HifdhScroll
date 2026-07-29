@@ -60,7 +60,13 @@ export function useCamera(): CameraController {
       return;
     }
     try {
-      const s = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      // Request a modest resolution/framerate. A full-res self-view decodes
+      // alongside the YouTube lecture, and on phones/tablets that contention is
+      // what makes the lecture stutter and "buffer" even on a good connection.
+      const s = await navigator.mediaDevices.getUserMedia({
+        video: { width: { ideal: 640 }, height: { ideal: 360 }, frameRate: { ideal: 24 } },
+        audio: true,
+      });
       streamRef.current = s;
       setStream(s);
       setCameraOn(true);

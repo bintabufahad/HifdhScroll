@@ -6,6 +6,8 @@ import type { RealtimeChannel } from "@supabase/supabase-js";
 
 export interface LectureState {
   videoId: string | null;
+  /** Playlist id when the lecture is a whole YouTube playlist (navigable). */
+  list: string | null;
   playing: boolean;
   /** Playback position (seconds) that was true at `at`. */
   time: number;
@@ -13,7 +15,7 @@ export interface LectureState {
   at: number;
 }
 
-export const EMPTY_LECTURE: LectureState = { videoId: null, playing: false, time: 0, at: 0 };
+export const EMPTY_LECTURE: LectureState = { videoId: null, list: null, playing: false, time: 0, at: 0 };
 
 /**
  * A persistent per-class Realtime channel (joined whenever you're in the class

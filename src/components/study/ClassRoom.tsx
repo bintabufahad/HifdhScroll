@@ -89,8 +89,8 @@ export default function ClassRoom({
       <CoursePlaylist
         open={courseOpen}
         onToggle={() => setCourseOpen((v) => !v)}
-        onPlayLecture={(id) => {
-          sync.setLecture({ videoId: id, playing: true, time: 0, at: Date.now() });
+        onPlayLecture={(lec) => {
+          sync.setLecture({ videoId: lec.videoId, list: lec.list, playing: true, time: 0, at: Date.now() });
           setCourseOpen(false);
         }}
         initialItems={initialCourse}
