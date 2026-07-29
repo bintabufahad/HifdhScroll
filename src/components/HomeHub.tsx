@@ -12,6 +12,15 @@ export default function HomeHub() {
     <div dir={dir} className="bg-app-dark flex flex-1 flex-col items-center justify-center px-5 py-8 sm:py-12">
       <SettingsMenu t={t} lang={lang} onSwitchLang={switchLang} />
 
+      {/* Small corner delight: gift an ayah to someone. */}
+      <Link
+        href="/gift/new"
+        className="lift glass-strong fixed right-3 top-3 z-50 flex h-10 items-center gap-1.5 rounded-full px-3 text-emerald-200 shadow-md transition hover:text-white sm:right-4 sm:top-4 sm:h-11"
+      >
+        <span className="text-lg">🎁</span>
+        <span className="hidden text-xs font-medium sm:inline">{t("sendAyah")}</span>
+      </Link>
+
       <header className="animate-rise-in mb-6 w-full max-w-2xl text-center sm:mb-10">
         <h1 dir="ltr" className="font-display text-4xl font-bold tracking-tight text-white sm:text-6xl">
           Ru<span className="text-emerald-300">sookh</span>
