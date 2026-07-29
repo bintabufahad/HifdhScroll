@@ -2,16 +2,25 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { surahs, getSurah } from "@/lib/surahs";
 import { randomSceneId } from "@/lib/scenes";
 
 /**
  * Compose an ayah gift: pick the ayah, add a note, get a link to send. The gift
  * lives entirely in the link (no storage) - simple, private, and permanent.
+ * Arriving from a feelings collection prefills that ayah (?s=&a=).
  */
 export default function GiftComposer() {
-  const [surahNumber, setSurahNumber] = useState(2);
-  const [ayahNumber, setAyahNumber] = useState(255);
+  const searchParams = useSearchParams();
+  const prefillSurah = Number(searchParams.get("s"));
+  const prefillAyah = Number(searchParams.get("a"));
+  const validPrefill = !!getSurah(prefillSurah);
+
+  const [surahNumber, setSurahNumber] = useState(validPrefill ? prefillSurah : 2);
+  const [ayahNumber, setAyahNumber] = useState(
+    validPrefill && prefillAyah >= 1 ? Math.min(prefillAyah, getSurah(prefillSurah)!.ayahCount) : 255
+  );
   const [to, setTo] = useState("");
   const [from, setFrom] = useState("");
   const [note, setNote] = useState("");

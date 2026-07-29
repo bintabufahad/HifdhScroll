@@ -33,6 +33,12 @@ const STRINGS = {
   logout: { en: "Log out", ar: "تسجيل الخروج" },
   language: { en: "Language", ar: "اللغة" },
   sendAyah: { en: "Send an ayah", ar: "أهدِ آية" },
+  feelTitle: { en: "When You Feel…", ar: "عندما تشعر…" },
+  feelDesc: {
+    en: "The Qur'an, organized by the moment you're in — open your feeling, sit with its ayahs, send one to a friend.",
+    ar: "القرآن مرتبًا بحسب لحظتك — افتح شعورك، تأمل آياته، وأهدِ آية لمن يحتاجها.",
+  },
+  feelOpen: { en: "Open →", ar: "افتح ←" },
 } as const;
 
 export type StringKey = keyof typeof STRINGS;

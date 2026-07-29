@@ -29,7 +29,7 @@ export default function HomeHub() {
         <p className="mx-auto mt-3 max-w-md text-sm text-white/60 sm:mt-4 sm:text-base">{t("tagline")}</p>
       </header>
 
-      <div className="grid w-full max-w-2xl grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-5">
+      <div className="grid w-full max-w-4xl grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-5">
         <Link
           href="/reels"
           className="lift glass animate-rise-in group flex items-center gap-4 rounded-2xl px-5 py-4 text-start sm:flex-col sm:gap-3 sm:rounded-3xl sm:py-8 sm:text-center"
@@ -58,6 +58,21 @@ export default function HomeHub() {
             </span>
           </span>
           <span className="text-xl text-emerald-300 sm:hidden">{dir === "rtl" ? "←" : "→"}</span>
+        </Link>
+
+        <Link
+          href="/feel"
+          className="lift glass animate-rise-in group flex items-center gap-4 rounded-2xl border border-amber-300/25 px-5 py-4 text-start sm:flex-col sm:gap-3 sm:rounded-3xl sm:py-8 sm:text-center"
+        >
+          <span className="text-4xl transition group-hover:scale-110 sm:text-5xl">🕊️</span>
+          <span className="flex flex-1 flex-col sm:items-center">
+            <span className="font-display text-lg font-bold text-white sm:text-2xl">{t("feelTitle")}</span>
+            <span className="text-xs text-white/55 sm:mt-1 sm:text-sm">{t("feelDesc")}</span>
+            <span className="mt-2 hidden rounded-full bg-amber-300/15 px-4 py-1.5 text-sm font-semibold text-amber-100 transition group-hover:bg-amber-300/25 sm:inline-block">
+              {t("feelOpen")}
+            </span>
+          </span>
+          <span className="text-xl text-amber-200/80 sm:hidden">{dir === "rtl" ? "←" : "→"}</span>
         </Link>
       </div>
 
