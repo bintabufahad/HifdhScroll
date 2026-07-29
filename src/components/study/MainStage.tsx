@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { extractYouTubeId, extractYouTubePlaylistId } from "@/lib/youtube";
 import { EMPTY_LECTURE, type LectureState } from "./useClassSync";
+import { useLanguage } from "@/lib/i18n";
 
 interface YTPlayer {
   playVideo(): void;
@@ -69,6 +70,7 @@ export default function MainStage({
   lecture: LectureState;
   onLecture: (state: LectureState) => void;
 }) {
+  const { t } = useLanguage();
   const [showInput, setShowInput] = useState(false);
   const [input, setInput] = useState("");
   const [error, setError] = useState("");
@@ -168,7 +170,7 @@ export default function MainStage({
     const list = extractYouTubePlaylistId(input);
     const id = extractYouTubeId(input);
     if (!id && !list) {
-      setError("That doesn't look like a YouTube link. Paste a full youtube.com or youtu.be URL.");
+      setError(t("notYtLink"));
       return;
     }
     setError("");
@@ -181,7 +183,7 @@ export default function MainStage({
     <div className="glass flex h-full flex-col rounded-2xl p-2 sm:p-3">
       <div className="mb-2 flex shrink-0 items-center justify-between gap-1.5">
         <p className="truncate text-[10px] font-medium uppercase tracking-wide text-emerald-200/70 sm:text-xs sm:tracking-widest">
-          Lecture
+          {t("lectureLabel")}
         </p>
         <div className="relative flex shrink-0 gap-1">
           <button
@@ -189,7 +191,7 @@ export default function MainStage({
             onClick={() => setShowInput((v) => !v)}
             className="rounded-full bg-emerald-500/90 px-2 py-1 text-[10px] font-medium text-emerald-950 transition hover:bg-emerald-400 sm:px-3 sm:text-xs"
           >
-            {hasLecture ? "Change" : "▶ Add lecture"}
+            {hasLecture ? t("changeBtn") : t("addLectureBtn")}
           </button>
 
           {showInput && (
@@ -198,11 +200,11 @@ export default function MainStage({
               className="absolute right-0 top-9 z-10 flex w-64 flex-col gap-2 rounded-lg border border-white/12 bg-[#0c1512] p-2 shadow-xl"
             >
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-medium text-white/70">Lecture link</span>
+                <span className="text-[11px] font-medium text-white/70">{t("lectureLink")}</span>
                 <button
                   type="button"
                   onClick={() => setShowInput(false)}
-                  aria-label="Close"
+                  aria-label={t("close")}
                   className="flex h-5 w-5 items-center justify-center rounded-full text-white/50 hover:bg-white/10 hover:text-white"
                 >
                   ✕
@@ -213,14 +215,14 @@ export default function MainStage({
                 autoFocus
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Paste a YouTube video or playlist link…"
+                placeholder={t("pasteYtPlaceholder")}
                 className="rounded border border-white/15 bg-white/10 px-2 py-1 text-xs text-white outline-none placeholder:text-white/40"
               />
               <button
                 type="submit"
                 className="rounded bg-emerald-500 px-2 py-1 text-xs font-medium text-emerald-950 hover:bg-emerald-400"
               >
-                Play for everyone
+                {t("playForEveryone")}
               </button>
               {hasLecture && (
                 <button
@@ -231,7 +233,7 @@ export default function MainStage({
                   }}
                   className="text-[11px] text-red-300/80 hover:text-red-300"
                 >
-                  Remove current lecture
+                  {t("removeCurrentLecture")}
                 </button>
               )}
               {error && <p className="text-xs text-red-300">{error}</p>}

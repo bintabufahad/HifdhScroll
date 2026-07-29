@@ -14,6 +14,7 @@ import { useCamera } from "./useCamera";
 import { useWebRTCCall } from "./useWebRTCCall";
 import { useClassSync } from "./useClassSync";
 import type { CourseItem, StudyClass, StudyTask } from "@/lib/types";
+import { useLanguage } from "@/lib/i18n";
 
 export default function ClassRoom({
   studyClass,
@@ -28,6 +29,7 @@ export default function ClassRoom({
   displayName?: string;
   isOwner: boolean;
 }) {
+  const { t } = useLanguage();
   const [toast, setToast] = useState("");
   const [courseOpen, setCourseOpen] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -43,22 +45,22 @@ export default function ClassRoom({
     setTimeout(() => setToast(""), 4500);
   }
 
-  const call = useWebRTCCall(mode === "call" ? studyClass.room : null, displayName, (msg) => {
-    flashToast(msg);
+  const call = useWebRTCCall(mode === "call" ? studyClass.room : null, displayName, () => {
+    flashToast(t("allowCamMic"));
     setMode("camera");
     setWhiteboardOpen(false);
   });
 
   function handleSessionComplete(seconds: number) {
     const minutes = Math.max(1, Math.round(seconds / 60));
-    flashToast(`Focus session complete — ${minutes} min. Baarak Allahu feek!`);
+    flashToast(`${t("focusCompleteA")} ${minutes} ${t("focusCompleteB")}`);
   }
 
   async function shareLink() {
     const inviteUrl = `${window.location.origin}/study/class/${studyClass.room}`;
     try {
       if (navigator.share) {
-        await navigator.share({ title: studyClass.name, text: "Join my class on Rusookh", url: inviteUrl });
+        await navigator.share({ title: studyClass.name, text: t("joinMyClass"), url: inviteUrl });
         return;
       }
     } catch {
@@ -69,7 +71,7 @@ export default function ClassRoom({
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      flashToast("Couldn't share — copy the link from your address bar.");
+      flashToast(t("couldntShare"));
     }
   }
 
@@ -112,7 +114,7 @@ export default function ClassRoom({
           href="/study"
           className="lift inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-500 px-3 py-1 text-xs font-semibold text-emerald-950 transition hover:bg-emerald-400 sm:px-4 sm:py-1.5 sm:text-sm"
         >
-          ← Classes
+          {t("classesBack")}
         </Link>
         <h1 className="min-w-0 flex-1 truncate font-display text-sm font-bold text-white sm:text-2xl">
           <span className="text-emerald-300">{studyClass.name}</span>
@@ -139,7 +141,7 @@ export default function ClassRoom({
                 onClick={isOwner ? inviteFriends : joinCall}
                 className="lift absolute right-3 top-3 z-10 inline-flex items-center gap-1 rounded-full border border-emerald-400/40 bg-black/60 px-3 py-1.5 text-xs font-semibold text-emerald-100 backdrop-blur transition hover:bg-black/80"
               >
-                {isOwner ? "👥 Invite friends" : "📹 Join call"}
+                {isOwner ? t("inviteFriends") : t("joinCall")}
               </button>
               <CameraView camera={camera} big />
             </>
@@ -152,7 +154,7 @@ export default function ClassRoom({
                     onClick={shareLink}
                     className="lift inline-flex items-center gap-1 rounded-full border border-emerald-400/40 bg-black/60 px-3 py-1.5 text-xs font-semibold text-emerald-100 backdrop-blur transition hover:bg-black/80"
                   >
-                    {copied ? "✓ Copied" : "🔗 Invite"}
+                    {copied ? t("copiedLink") : t("inviteMore")}
                   </button>
                 )}
                 <button
@@ -160,7 +162,7 @@ export default function ClassRoom({
                   onClick={() => setMode("camera")}
                   className="lift rounded-full bg-red-600/90 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur transition hover:bg-red-500"
                 >
-                  Leave
+                  {t("leaveCall")}
                 </button>
               </div>
               <VideoGrid

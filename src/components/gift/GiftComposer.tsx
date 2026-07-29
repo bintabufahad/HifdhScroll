@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { surahs, getSurah } from "@/lib/surahs";
 import { randomSceneId } from "@/lib/scenes";
+import { useLanguage } from "@/lib/i18n";
 
 /**
  * Compose an ayah gift: pick the ayah, add a note, get a link to send. The gift
@@ -12,6 +13,7 @@ import { randomSceneId } from "@/lib/scenes";
  * Arriving from a feelings collection prefills that ayah (?s=&a=).
  */
 export default function GiftComposer() {
+  const { t, lang, dir } = useLanguage();
   const searchParams = useSearchParams();
   const prefillSurah = Number(searchParams.get("s"));
   const prefillAyah = Number(searchParams.get("a"));
@@ -46,7 +48,7 @@ export default function GiftComposer() {
   async function shareLink() {
     try {
       if (navigator.share) {
-        await navigator.share({ title: "An ayah for you 🎁", url: link });
+        await navigator.share({ title: t("anAyahForYou"), url: link });
         return;
       }
     } catch {
@@ -62,24 +64,24 @@ export default function GiftComposer() {
   }
 
   return (
-    <div className="bg-app-dark flex min-h-[100dvh] flex-col items-center px-5 py-8">
+    <div dir={dir} className="bg-app-dark flex min-h-[100dvh] flex-col items-center px-5 py-8">
       <div className="w-full max-w-md">
         <div className="mb-5 flex items-center gap-3">
           <Link
             href="/"
             className="lift inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-500 px-4 py-1.5 text-sm font-semibold text-emerald-950 transition hover:bg-emerald-400"
           >
-            ← Home
+            {dir === "rtl" ? "→" : "←"} {t("home")}
           </Link>
           <h1 className="font-display text-xl font-bold text-white sm:text-2xl">
-            Send an <span className="text-emerald-300">ayah</span> 🎁
+            {t("giftTitleA")} <span className="text-emerald-300">{t("giftTitleB")}</span> 🎁
           </h1>
         </div>
 
         <form onSubmit={buildLink} className="glass flex flex-col gap-3 rounded-2xl p-4 sm:p-5">
           <div className="flex gap-2">
             <label className="flex min-w-0 flex-[2] flex-col gap-1 text-xs text-white/60">
-              Surah
+              {t("surahLabel")}
               <select
                 value={surahNumber}
                 onChange={(e) => {
@@ -91,13 +93,13 @@ export default function GiftComposer() {
               >
                 {surahs.map((s) => (
                   <option key={s.number} value={s.number}>
-                    {s.number}. {s.name}
+                    {lang === "ar" ? `${s.number}. ${s.nameArabic}` : `${s.number}. ${s.name}`}
                   </option>
                 ))}
               </select>
             </label>
             <label className="flex min-w-0 flex-1 flex-col gap-1 text-xs text-white/60">
-              Ayah (1–{maxAyah})
+              {t("ayahWord")} (1–{maxAyah})
               <input
                 type="number"
                 min={1}
@@ -114,7 +116,7 @@ export default function GiftComposer() {
             value={to}
             onChange={(e) => setTo(e.target.value)}
             maxLength={60}
-            placeholder="Their name (optional)"
+            placeholder={t("theirName")}
             className="rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-white outline-none placeholder:text-white/40 focus:ring-2 focus:ring-emerald-500/50"
           />
           <input
@@ -122,7 +124,7 @@ export default function GiftComposer() {
             value={from}
             onChange={(e) => setFrom(e.target.value)}
             maxLength={60}
-            placeholder="Your name (optional)"
+            placeholder={t("yourName")}
             className="rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-white outline-none placeholder:text-white/40 focus:ring-2 focus:ring-emerald-500/50"
           />
           <textarea
@@ -130,7 +132,7 @@ export default function GiftComposer() {
             onChange={(e) => setNote(e.target.value)}
             maxLength={300}
             rows={3}
-            placeholder="A short personal note (optional) — e.g. “This ayah carried me through a hard week. May it comfort you too.”"
+            placeholder={t("giftNotePlaceholder")}
             className="rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-white outline-none placeholder:text-white/40 focus:ring-2 focus:ring-emerald-500/50"
           />
 
@@ -138,7 +140,7 @@ export default function GiftComposer() {
             type="submit"
             className="lift rounded-full bg-emerald-500 py-2.5 font-display font-semibold text-emerald-950 transition hover:bg-emerald-400"
           >
-            Create gift link
+            {t("createGiftLink")}
           </button>
         </form>
 
@@ -151,7 +153,7 @@ export default function GiftComposer() {
                 onClick={shareLink}
                 className="lift flex-1 rounded-full bg-emerald-500 py-2 text-sm font-semibold text-emerald-950 transition hover:bg-emerald-400"
               >
-                {copied ? "✓ Copied" : "Share the gift"}
+                {copied ? t("copiedLink") : t("shareGift")}
               </button>
               <a
                 href={link}
@@ -159,7 +161,7 @@ export default function GiftComposer() {
                 rel="noreferrer"
                 className="rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm text-white/80 transition hover:bg-white/10"
               >
-                Preview
+                {t("preview")}
               </a>
             </div>
           </div>

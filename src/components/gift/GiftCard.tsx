@@ -6,6 +6,7 @@ import SceneBackground from "@/components/SceneBackground";
 import { getAudioUrlCandidates } from "@/lib/audio";
 import { getQari } from "@/lib/qaris";
 import type { Ayah } from "@/lib/types";
+import { useLanguage } from "@/lib/i18n";
 
 /** Converts a number to Arabic-Indic digits (e.g. 255 -> ٢٥٥). */
 function toArabicNumerals(n: number): string {
@@ -30,6 +31,7 @@ export default function GiftCard({
   note: string;
   sceneId: string;
 }) {
+  const { t } = useLanguage();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [candidateIndex, setCandidateIndex] = useState(0);
   const [playing, setPlaying] = useState(false);
@@ -67,7 +69,7 @@ export default function GiftCard({
       <div className="animate-rise-in relative z-10 flex w-full max-w-lg flex-col items-center gap-4 text-center">
         {to && (
           <p className="text-sm text-amber-100/90">
-            A gift for <strong className="font-display text-amber-200">{to}</strong> 🎁
+            {t("giftFor")} <strong className="font-display text-amber-200">{to}</strong> 🎁
           </p>
         )}
 
@@ -92,7 +94,7 @@ export default function GiftCard({
           onClick={togglePlay}
           className="lift rounded-full bg-white/12 px-5 py-2 text-sm font-medium text-white backdrop-blur transition hover:bg-white/20"
         >
-          {playing ? "⏸ Pause recitation" : "▶ Play recitation"}
+          {playing ? t("pauseRecitation") : t("playRecitation")}
         </button>
 
         {note && (
@@ -107,10 +109,10 @@ export default function GiftCard({
             href="/gift/new"
             className="lift rounded-full bg-emerald-500 px-5 py-2 text-sm font-semibold text-emerald-950 transition hover:bg-emerald-400"
           >
-            🎁 Send someone an ayah
+            {t("sendSomeoneAyah")}
           </Link>
           <Link href="/" className="text-xs text-white/55 underline underline-offset-2 hover:text-white/80">
-            made with Rusookh — your companion for the Qur&apos;an
+            {t("madeWithRusookh")}
           </Link>
         </div>
       </div>

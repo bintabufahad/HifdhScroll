@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import type { Review } from "@/lib/types";
+import { useLanguage } from "@/lib/i18n";
 
 function Stars({ value }: { value: number | null }) {
   const n = value ?? 0;
@@ -34,6 +35,7 @@ export default function ReviewsPage({
   currentUserId: string | null;
   defaultName: string;
 }) {
+  const { t, dir } = useLanguage();
   const [reviews, setReviews] = useState(initialReviews);
   const [rating, setRating] = useState(0);
   const [name, setName] = useState(defaultName);
@@ -55,7 +57,7 @@ export default function ReviewsPage({
       data: { user },
     } = await supabase.auth.getUser();
     if (!user) {
-      setError("Please sign in to leave a review.");
+      setError(t("signInToReview"));
       setSubmitting(false);
       return;
     }
@@ -73,7 +75,7 @@ export default function ReviewsPage({
 
     setSubmitting(false);
     if (insErr || !data) {
-      setError(insErr?.message || "Couldn't submit your review. Please try again.");
+      setError(insErr?.message || t("reviewFailed"));
       return;
     }
     setReviews((prev) => [data as Review, ...prev]);
@@ -92,22 +94,21 @@ export default function ReviewsPage({
   }
 
   return (
-    <div className="bg-app-dark flex flex-1 flex-col px-4 py-8 sm:px-6 sm:py-12">
+    <div dir={dir} className="bg-app-dark flex flex-1 flex-col px-4 py-8 sm:px-6 sm:py-12">
       <header className="animate-rise-in mx-auto mb-6 w-full max-w-2xl text-center">
         <h1 className="font-display text-3xl font-bold text-white sm:text-4xl">
-          Reviews <span className="text-emerald-300">&amp; Feedback</span>
+          {t("reviewsTitleA")} <span className="text-emerald-300">{t("reviewsTitleB")}</span>
         </h1>
         <div className="mx-auto mt-2 h-px w-20 bg-gradient-to-r from-transparent via-emerald-400/70 to-transparent" />
         <p className="mx-auto mt-3 max-w-md text-sm text-white/60">
-          What the community says about Rusookh. Your words may be exactly the invitation that brings someone back to
-          the Qur&apos;an.
+          {t("reviewsSubtitle")}
         </p>
         <div className="mt-4 flex justify-center">
           <Link
             href="/"
             className="lift inline-flex items-center gap-1 rounded-full bg-emerald-500 px-5 py-2 text-sm font-semibold text-emerald-950 transition hover:bg-emerald-400"
           >
-            ← Home
+            {dir === "rtl" ? "→" : "←"} {t("home")}
           </Link>
         </div>
       </header>
@@ -117,24 +118,24 @@ export default function ReviewsPage({
         {signedIn ? (
           alreadyReviewed && !done ? (
             <div className="glass rounded-2xl p-4 text-center text-sm text-white/60">
-              You&apos;ve already left a review — jazakAllah khair. You can add another below any time.
+              {t("alreadyReviewed")}
             </div>
           ) : null
         ) : (
           <div className="glass rounded-2xl p-4 text-center text-sm text-white/70">
             <Link href="/waitlist?next=/feedback" className="font-semibold text-emerald-300 underline">
-              Sign in
+              {t("signInWord")}
             </Link>{" "}
-            to leave a review.
+            {t("toLeaveReview")}
           </div>
         )}
 
         {signedIn && (
           <form onSubmit={handleSubmit} className="glass flex flex-col gap-4 rounded-2xl p-4 sm:p-5">
-            <p className="font-display text-lg font-semibold text-white">Leave a review</p>
+            <p className="font-display text-lg font-semibold text-white">{t("leaveReview")}</p>
 
             <div>
-              <p className="mb-2 text-sm text-white/70">Your rating</p>
+              <p className="mb-2 text-sm text-white/70">{t("yourRating")}</p>
               <div className="flex gap-1.5">
                 {[1, 2, 3, 4, 5].map((n) => (
                   <button
@@ -158,7 +159,7 @@ export default function ReviewsPage({
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Your name (optional)"
+              placeholder={t("yourName")}
               className="rounded-lg border border-white/15 bg-white/5 px-4 py-2.5 text-sm text-white outline-none placeholder:text-white/40 focus:ring-2 focus:ring-emerald-500/50"
             />
 
@@ -167,19 +168,19 @@ export default function ReviewsPage({
               value={body}
               onChange={(e) => setBody(e.target.value)}
               rows={4}
-              placeholder="Share your experience with Rusookh…"
+              placeholder={t("shareExperience")}
               className="rounded-lg border border-white/15 bg-white/5 px-4 py-3 text-sm text-white outline-none placeholder:text-white/40 focus:ring-2 focus:ring-emerald-500/50"
             />
 
             {error && <p className="text-sm text-red-300">{error}</p>}
-            {done && <p className="text-sm text-emerald-300">JazakAllah khair — your review is posted below.</p>}
+            {done && <p className="text-sm text-emerald-300">{t("reviewPosted")}</p>}
 
             <button
               type="submit"
               disabled={submitting}
               className="lift self-start rounded-full bg-emerald-500 px-6 py-2.5 text-sm font-semibold text-emerald-950 hover:bg-emerald-400 disabled:opacity-60"
             >
-              {submitting ? "Posting…" : "Post review"}
+              {submitting ? t("posting") : t("postReview")}
             </button>
           </form>
         )}
@@ -187,17 +188,17 @@ export default function ReviewsPage({
         {/* Reviews list */}
         <div className="flex flex-col gap-3">
           <p className="text-xs font-medium uppercase tracking-widest text-emerald-200/70">
-            {reviews.length} review{reviews.length === 1 ? "" : "s"}
+            {reviews.length} {reviews.length === 1 ? t("reviewWord") : t("reviewsWord")}
           </p>
           {reviews.length === 0 ? (
             <p className="glass rounded-2xl p-6 text-center text-sm text-white/50">
-              No reviews yet — be the first to share your experience.
+              {t("noReviewsYet")}
             </p>
           ) : (
             reviews.map((r) => (
               <div key={r.id} className="glass rounded-2xl p-4">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="font-medium text-white">{r.author_name?.trim() || "A student"}</span>
+                  <span className="font-medium text-white">{r.author_name?.trim() || t("aStudent")}</span>
                   <span className="text-xs text-white/40">{formatDate(r.created_at)}</span>
                 </div>
                 {r.rating ? <div className="mt-1 text-sm">
@@ -210,7 +211,7 @@ export default function ReviewsPage({
                     onClick={() => deleteOwn(r.id)}
                     className="mt-2 text-xs text-red-300/70 hover:text-red-300"
                   >
-                    Delete my review
+                    {t("deleteMyReview")}
                   </button>
                 )}
               </div>

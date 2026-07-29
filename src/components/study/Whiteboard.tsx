@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useLanguage } from "@/lib/i18n";
 
 /**
  * A shared, persistent whiteboard. Live drawing is broadcast over the class
@@ -29,6 +30,7 @@ export default function Whiteboard({
   send: (data: unknown) => void;
   onClose: () => void;
 }) {
+  const { t } = useLanguage();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const drawing = useRef(false);
   const last = useRef<Point | null>(null);
@@ -162,14 +164,14 @@ export default function Whiteboard({
             onClick={clearAll}
             className="rounded-full border border-white/20 px-3 py-1.5 text-xs text-white/80 hover:bg-white/10"
           >
-            Clear
+            {t("wbClear")}
           </button>
           <button
             type="button"
             onClick={onClose}
             className="rounded-full bg-emerald-500 px-4 py-1.5 text-xs font-semibold text-emerald-950 hover:bg-emerald-400"
           >
-            Done
+            {t("wbDone")}
           </button>
         </div>
       </div>

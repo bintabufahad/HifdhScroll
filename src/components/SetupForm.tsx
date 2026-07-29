@@ -2,12 +2,15 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { surahs, TOTAL_PAGES } from "@/lib/surahs";
 import { qaris } from "@/lib/qaris";
 import type { ReelMode } from "@/lib/types";
+import { useLanguage } from "@/lib/i18n";
 
 export default function SetupForm() {
   const router = useRouter();
+  const { t, lang, dir } = useLanguage();
   const [mode, setMode] = useState<ReelMode>("surah");
   const [surah, setSurah] = useState(2);
   const [page, setPage] = useState(1);
@@ -46,10 +49,20 @@ export default function SetupForm() {
     "w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2.5 text-sm text-white outline-none placeholder:text-white/40 focus:ring-2 focus:ring-emerald-500/50 sm:text-base";
 
   return (
-    <div className="mx-auto flex w-full max-w-xl flex-col gap-3 sm:gap-5">
+    <div dir={dir} className="mx-auto flex w-full max-w-xl flex-col gap-3 sm:gap-5">
+      {/* Compact header: Home chip + title inline, so the form sits high up. */}
+      <header className="flex w-full items-center gap-3">
+        <Link
+          href="/"
+          className="lift inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-emerald-950 transition hover:bg-emerald-400 sm:text-sm"
+        >
+          {dir === "rtl" ? "→" : "←"} {t("home")}
+        </Link>
+        <h1 className="font-display text-xl font-bold tracking-tight text-white sm:text-2xl">{t("reelsTitle")}</h1>
+      </header>
       <section className="glass rounded-2xl p-3 sm:p-5">
         <h2 className="mb-2 font-display text-sm font-semibold uppercase tracking-widest text-emerald-200/80">
-          Select passage
+          {t("selectPassage")}
         </h2>
         <div className="mb-3 flex gap-2">
           {(["surah", "page", "range"] as ReelMode[]).map((m) => (
@@ -62,7 +75,7 @@ export default function SetupForm() {
                   : "border-white/15 bg-white/5 text-white/70 hover:bg-white/10"
               }`}
             >
-              {m}
+              {m === "surah" ? t("modeSurah") : m === "page" ? t("modePage") : t("modeRange")}
             </button>
           ))}
         </div>
@@ -71,7 +84,9 @@ export default function SetupForm() {
           <select value={surah} onChange={(e) => setSurah(Number(e.target.value))} className={selectClass}>
             {surahs.map((s) => (
               <option key={s.number} value={s.number}>
-                {s.number}. {s.name} · {s.nameArabic} ({s.ayahCount} ayahs)
+                {lang === "ar"
+                  ? `${s.number}. ${s.nameArabic} (${s.ayahCount} ${t("ayahsWord")})`
+                  : `${s.number}. ${s.name} · ${s.nameArabic} (${s.ayahCount} ayahs)`}
               </option>
             ))}
           </select>
@@ -85,18 +100,18 @@ export default function SetupForm() {
             value={page}
             onChange={(e) => setPage(Number(e.target.value))}
             className={inputClass}
-            placeholder={`Mushaf page (1–${TOTAL_PAGES})`}
+            placeholder={`${t("mushafPage")} (1–${TOTAL_PAGES})`}
           />
         )}
 
         {mode === "range" && (
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <p className="text-xs text-white/50">Start</p>
+              <p className="text-xs text-white/50">{t("start")}</p>
               <select value={startSurah} onChange={(e) => setStartSurah(Number(e.target.value))} className={selectClass}>
                 {surahs.map((s) => (
                   <option key={s.number} value={s.number}>
-                    {s.number}. {s.name}
+                    {lang === "ar" ? `${s.number}. ${s.nameArabic}` : `${s.number}. ${s.name}`}
                   </option>
                 ))}
               </select>
@@ -106,15 +121,15 @@ export default function SetupForm() {
                 value={startAyah}
                 onChange={(e) => setStartAyah(Number(e.target.value))}
                 className={inputClass}
-                placeholder="Ayah"
+                placeholder={t("ayahWord")}
               />
             </div>
             <div className="space-y-2">
-              <p className="text-xs text-white/50">End</p>
+              <p className="text-xs text-white/50">{t("end")}</p>
               <select value={endSurah} onChange={(e) => setEndSurah(Number(e.target.value))} className={selectClass}>
                 {surahs.map((s) => (
                   <option key={s.number} value={s.number}>
-                    {s.number}. {s.name}
+                    {lang === "ar" ? `${s.number}. ${s.nameArabic}` : `${s.number}. ${s.name}`}
                   </option>
                 ))}
               </select>
@@ -124,7 +139,7 @@ export default function SetupForm() {
                 value={endAyah}
                 onChange={(e) => setEndAyah(Number(e.target.value))}
                 className={inputClass}
-                placeholder="Ayah"
+                placeholder={t("ayahWord")}
               />
             </div>
           </div>
@@ -134,9 +149,9 @@ export default function SetupForm() {
       <section className="glass rounded-2xl p-3 sm:p-5">
         <div className="mb-2 flex items-baseline justify-between gap-2">
           <h2 className="font-display text-sm font-semibold uppercase tracking-widest text-emerald-200/80">
-            Reciters <span className="font-sans text-xs font-normal normal-case tracking-normal text-white/35">(select your reciters)</span>
+            {t("reciters")} <span className="font-sans text-xs font-normal normal-case tracking-normal text-white/35">{t("selectYourReciters")}</span>
           </h2>
-          <span className="shrink-0 text-right text-xs text-white/50">{selectedQaris.length} selected</span>
+          <span className="shrink-0 text-right text-xs text-white/50">{selectedQaris.length} {t("selectedCount")}</span>
         </div>
         <div className="flex flex-wrap gap-1.5">
           {qaris.map((q) => (
@@ -155,7 +170,7 @@ export default function SetupForm() {
         onClick={generate}
         className="lift w-full rounded-full bg-emerald-500 py-2.5 font-display text-base font-semibold tracking-wide text-emerald-950 transition hover:bg-emerald-400 sm:py-3 sm:text-lg"
       >
-        Generate Reels
+        {t("generateReels")}
       </button>
     </div>
   );

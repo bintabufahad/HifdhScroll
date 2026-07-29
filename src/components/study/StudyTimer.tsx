@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useLanguage } from "@/lib/i18n";
 
 const PRESETS_MINUTES = [15, 25, 45, 60];
 
@@ -16,6 +17,7 @@ function formatTime(seconds: number): string {
 
 /** Compact focus timer - deliberately small, tucked in the sidebar corner. */
 export default function StudyTimer({ onSessionComplete }: { onSessionComplete: (seconds: number) => void }) {
+  const { t } = useLanguage();
   const [presetMinutes, setPresetMinutes] = useState(25);
   const [remaining, setRemaining] = useState(25 * 60);
   const [running, setRunning] = useState(false);
@@ -67,14 +69,14 @@ export default function StudyTimer({ onSessionComplete }: { onSessionComplete: (
           disabled={remaining === 0}
           className="rounded-full bg-emerald-500 px-3 py-1 text-xs font-medium text-emerald-950 hover:bg-emerald-400 disabled:opacity-50"
         >
-          {running ? "Pause" : "Start"}
+          {running ? t("timerPause") : t("timerStart")}
         </button>
         <button
           type="button"
           onClick={endAndLogNow}
           className="rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs font-medium text-white/75 hover:bg-white/10"
         >
-          End
+          {t("timerEnd")}
         </button>
 
         <div className="ml-auto flex gap-1">

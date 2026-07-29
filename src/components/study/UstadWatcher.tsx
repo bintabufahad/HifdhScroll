@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useLanguage } from "@/lib/i18n";
 
 const FIRST_ARRIVAL_MS = 5500; // ~5-6s after entering the dashboard
 const RETURN_EVERY_MS = 5 * 60 * 1000; // every 5 minutes
@@ -13,6 +14,7 @@ const WATCH_DURATION_MS = 6000;
  * video). Purely decorative - he doesn't actually track anything.
  */
 export default function UstadWatcher({ enabled }: { enabled: boolean }) {
+  const { t } = useLanguage();
   const [peeking, setPeeking] = useState(false);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const pendingCueRef = useRef(false);
@@ -114,7 +116,7 @@ export default function UstadWatcher({ enabled }: { enabled: boolean }) {
       <div className="flex items-end gap-2">
         {peeking && (
           <span className="mb-10 inline-block max-w-[52vw] rounded-lg bg-black/75 px-2.5 py-1 text-[11px] leading-snug text-emerald-200/90 backdrop-blur sm:mb-14 sm:max-w-none sm:rounded-full sm:px-3 sm:text-xs">
-            Your Ustad is watching — stay focused.
+            {t("ustadWatching")}
           </span>
         )}
         <UstadFigure />

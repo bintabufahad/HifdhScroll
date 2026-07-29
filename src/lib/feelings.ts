@@ -17,8 +17,11 @@ export interface Feeling {
   emoji: string;
   label: string;
   labelArabic: string;
+  /** Arabic heading for the collection, e.g. "حين يضيق صدرك". */
+  whenArabic: string;
   /** One quiet line under the title - sets the tone, makes it shareable. */
   line: string;
+  lineArabic: string;
   refs: AyahRef[];
 }
 
@@ -27,8 +30,10 @@ export const feelings: Feeling[] = [
     id: "anxious",
     emoji: "🌧️",
     label: "Anxious",
-    labelArabic: "قلِق",
+    labelArabic: "القلق",
+    whenArabic: "حين يضيق صدرك",
     line: "For the chest that feels tight, and the mind that will not go quiet.",
+    lineArabic: "للصدرِ الضيّق، والعقلِ الذي لا يهدأ.",
     refs: [
       { surah: 13, ayah: 28 },
       { surah: 94, ayah: 5, endAyah: 6 },
@@ -41,8 +46,10 @@ export const feelings: Feeling[] = [
     id: "grieving",
     emoji: "🥀",
     label: "Grieving",
-    labelArabic: "حزين",
+    labelArabic: "الحزن",
+    whenArabic: "حين تفقد عزيزًا",
     line: "For loss, and for the patience that Allah promises to stay beside.",
+    lineArabic: "للفقد، وللصبر الذي وعد الله أهلَه بأنه معهم.",
     refs: [
       { surah: 2, ayah: 155, endAyah: 157 },
       { surah: 2, ayah: 153 },
@@ -54,8 +61,10 @@ export const feelings: Feeling[] = [
     id: "sinful",
     emoji: "🤲",
     label: "Far from Allah",
-    labelArabic: "مقصّر",
+    labelArabic: "البعد عن الله",
+    whenArabic: "حين تظن أن ذنوبك لا تُغفر",
     line: "For the one who thinks their sins are too many to come back from.",
+    lineArabic: "لمن ظنّ أن ذنوبه أكبر من رحمة الله.",
     refs: [
       { surah: 39, ayah: 53 },
       { surah: 4, ayah: 110 },
@@ -68,8 +77,10 @@ export const feelings: Feeling[] = [
     id: "lonely",
     emoji: "🌙",
     label: "Lonely",
-    labelArabic: "وحيد",
+    labelArabic: "الوحدة",
+    whenArabic: "حين تشعر بالوحدة",
     line: "For the nights when it feels like no one sees you. He does.",
+    lineArabic: "لليالي التي تظن فيها أن لا أحد يراك. هو يراك.",
     refs: [
       { surah: 2, ayah: 186 },
       { surah: 50, ayah: 16 },
@@ -81,8 +92,10 @@ export const feelings: Feeling[] = [
     id: "afraid-future",
     emoji: "🌊",
     label: "Afraid of the future",
-    labelArabic: "خائف من الغد",
+    labelArabic: "الخوف من الغد",
+    whenArabic: "حين تخاف من الغد",
     line: "For rizq, results, and everything you cannot control.",
+    lineArabic: "للرزق والنتائج وكلِّ ما ليس بيدك.",
     refs: [
       { surah: 11, ayah: 6 },
       { surah: 2, ayah: 216 },
@@ -95,8 +108,10 @@ export const feelings: Feeling[] = [
     id: "weak",
     emoji: "⛰️",
     label: "Defeated",
-    labelArabic: "منكسر",
+    labelArabic: "الانكسار",
+    whenArabic: "حين تنكسر",
     line: "For when you feel small, behind, or beaten down.",
+    lineArabic: "لحين تشعر أنك صغير أو متأخر أو منهزم.",
     refs: [
       { surah: 3, ayah: 139 },
       { surah: 94, ayah: 5, endAyah: 6 },
@@ -108,8 +123,10 @@ export const feelings: Feeling[] = [
     id: "tempted",
     emoji: "🔥",
     label: "Fighting temptation",
-    labelArabic: "يجاهد نفسه",
+    labelArabic: "مجاهدة النفس",
+    whenArabic: "حين تجاهد نفسك",
     line: "For the struggle nobody else can see.",
+    lineArabic: "للمجاهدة التي لا يراها أحد سوى الله.",
     refs: [
       { surah: 79, ayah: 40, endAyah: 41 },
       { surah: 41, ayah: 36 },
@@ -121,8 +138,10 @@ export const feelings: Feeling[] = [
     id: "angry",
     emoji: "🌫️",
     label: "Angry",
-    labelArabic: "غاضب",
+    labelArabic: "الغضب",
+    whenArabic: "حين تغضب",
     line: "For the fire in the chest, and the reward of swallowing it.",
+    lineArabic: "لنار الصدر، وأجرِ من كظمها.",
     refs: [
       { surah: 3, ayah: 134 },
       { surah: 42, ayah: 37 },
@@ -134,8 +153,10 @@ export const feelings: Feeling[] = [
     id: "ungrateful",
     emoji: "🌤️",
     label: "Forgetting my blessings",
-    labelArabic: "غافل عن النعم",
+    labelArabic: "الغفلة عن النعم",
+    whenArabic: "حين تغفل عن النعم",
     line: "For the days everything feels like not enough.",
+    lineArabic: "للأيام التي يبدو فيها كل شيء ناقصًا.",
     refs: [
       { surah: 14, ayah: 7 },
       { surah: 16, ayah: 18 },

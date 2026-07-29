@@ -2,8 +2,10 @@
 
 import { useEffect, useRef } from "react";
 import type { CallTile } from "./useWebRTCCall";
+import { useLanguage } from "@/lib/i18n";
 
 function Tile({ tile }: { tile: CallTile }) {
+  const { t } = useLanguage();
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
@@ -26,8 +28,8 @@ function Tile({ tile }: { tile: CallTile }) {
         </div>
       )}
       <span className="pointer-events-none absolute bottom-1.5 left-1.5 max-w-[85%] truncate rounded bg-black/60 px-1.5 py-0.5 text-[10px] text-white/85">
-        {tile.name}
-        {tile.local ? " (you)" : ""}
+        {tile.name === "Guest" ? t("guest") : tile.name}
+        {tile.local ? ` ${t("youSuffix")}` : ""}
       </span>
     </div>
   );
@@ -46,6 +48,7 @@ export default function VideoGrid({
   onToggleMic: () => void;
   onToggleCam: () => void;
 }) {
+  const { t } = useLanguage();
   const n = tiles.length;
   // Match the reference screenshots (and the narrow camera panel on every
   // device): solo fills the frame; 2 sit side-by-side; 3-4 make a 2x2; 5+ keep
@@ -64,10 +67,10 @@ export default function VideoGrid({
       </div>
 
       <div className="flex shrink-0 items-center justify-center gap-2">
-        <CtrlButton active={micOn} onClick={onToggleMic} label={micOn ? "Mute" : "Unmute"}>
+        <CtrlButton active={micOn} onClick={onToggleMic} label={micOn ? t("mute") : t("unmute")}>
           {micOn ? "🎙️" : "🔇"}
         </CtrlButton>
-        <CtrlButton active={camOn} onClick={onToggleCam} label={camOn ? "Turn camera off" : "Turn camera on"}>
+        <CtrlButton active={camOn} onClick={onToggleCam} label={camOn ? t("turnCameraOff") : t("turnCameraOn")}>
           {camOn ? "📹" : "🚫"}
         </CtrlButton>
       </div>

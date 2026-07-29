@@ -4,6 +4,7 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { extractYouTubeId, extractYouTubePlaylistId } from "@/lib/youtube";
 import type { CourseItem, CourseItemType } from "@/lib/types";
+import { useLanguage } from "@/lib/i18n";
 
 function thumb(id: string): string {
   return `https://img.youtube.com/vi/${id}/mqdefault.jpg`;
@@ -33,6 +34,7 @@ export default function CoursePlaylist({
   /** When provided, a Whiteboard button is shown grouped next to the Course button. */
   onOpenWhiteboard?: () => void;
 }) {
+  const { t } = useLanguage();
   const [items, setItems] = useState<CourseItem[]>(initialItems);
   const [type, setType] = useState<CourseItemType>("youtube");
   const [url, setUrl] = useState("");
@@ -58,7 +60,7 @@ export default function CoursePlaylist({
       if (!trimmed) return;
       const isList = !!extractYouTubePlaylistId(trimmed);
       if (!extractYouTubeId(trimmed) && !isList) {
-        setError("That doesn't look like a YouTube link.");
+        setError(t("notYtShort"));
         return;
       }
       setBusy(true);
@@ -69,7 +71,7 @@ export default function CoursePlaylist({
           class_id: classId,
           type: "youtube",
           url: trimmed,
-          title: title.trim() || (isList ? "Playlist" : "Lecture"),
+          title: title.trim() || (isList ? t("playlistDefault") : t("lectureDefault")),
           position,
         })
         .select("id, type, url, title, done, position")
@@ -80,14 +82,14 @@ export default function CoursePlaylist({
         setUrl("");
         setTitle("");
       } else {
-        setError("Couldn't save this. Please try again.");
+        setError(t("saveFailed"));
       }
       return;
     }
 
     // PDF: upload the chosen file from the device to storage.
     if (!pdfFile) {
-      setError("Choose a PDF file to upload.");
+      setError(t("choosePdfFirst"));
       return;
     }
     setBusy(true);
@@ -98,7 +100,7 @@ export default function CoursePlaylist({
       .upload(path, pdfFile, { contentType: "application/pdf", upsert: false });
     if (upErr) {
       setBusy(false);
-      setError("Couldn't upload the PDF. Please try again.");
+      setError(t("uploadFailed"));
       return;
     }
     const { data: pub } = supabase.storage.from("course-pdfs").getPublicUrl(path);
@@ -120,7 +122,7 @@ export default function CoursePlaylist({
       setPdfFile(null);
       setTitle("");
     } else {
-      setError("Couldn't save this. Please try again.");
+      setError(t("saveFailed"));
     }
   }
 
@@ -174,17 +176,17 @@ export default function CoursePlaylist({
         <button
           type="button"
           onClick={onOpenWhiteboard}
-          aria-label="Whiteboard"
+          aria-label={t("whiteboardBtn")}
           className="lift glass-strong flex h-11 items-center gap-1 rounded-full border border-transparent px-3 text-emerald-200 shadow-md transition hover:text-white"
         >
           <span className="text-lg">🖊️</span>
-          <span className="hidden text-xs font-medium sm:inline">Whiteboard</span>
+          <span className="hidden text-xs font-medium sm:inline">{t("whiteboardBtn")}</span>
         </button>
       )}
       <button
         type="button"
         onClick={onToggle}
-        aria-label="Course playlist"
+        aria-label={t("courseBtn")}
         className={`lift flex h-11 items-center gap-1 rounded-full border px-3 shadow-md transition ${
           open
             ? "border-emerald-400 bg-emerald-500 text-emerald-950"
@@ -192,13 +194,13 @@ export default function CoursePlaylist({
         }`}
       >
         <span className="text-lg">☰</span>
-        <span className="hidden text-xs font-medium sm:inline">Course</span>
+        <span className="hidden text-xs font-medium sm:inline">{t("courseBtn")}</span>
       </button>
 
       {open && (
         <div className="animate-rise-in fixed right-3 top-[4.25rem] w-80 rounded-xl border border-white/12 bg-[#0c1512] p-3 shadow-2xl">
           <div className="mb-2 flex items-center justify-between">
-            <p className="text-xs font-medium uppercase tracking-widest text-emerald-200/70">Structured course</p>
+            <p className="text-xs font-medium uppercase tracking-widest text-emerald-200/70">{t("structuredCourse")}</p>
             <div className="flex items-center gap-2">
               <span className="text-xs text-white/50">
                 {doneCount}/{items.length}
@@ -206,7 +208,7 @@ export default function CoursePlaylist({
               <button
                 type="button"
                 onClick={onToggle}
-                aria-label="Close course"
+                aria-label={t("close")}
                 className="flex h-6 w-6 items-center justify-center rounded-full text-white/50 transition hover:bg-white/10 hover:text-white"
               >
                 ✕
@@ -225,18 +227,18 @@ export default function CoursePlaylist({
 
           <form onSubmit={addItem} className="mb-3 flex flex-col gap-2">
             <div className="flex gap-1">
-              {(["youtube", "pdf"] as CourseItemType[]).map((t) => (
+              {(["youtube", "pdf"] as CourseItemType[]).map((tab) => (
                 <button
-                  key={t}
+                  key={tab}
                   type="button"
-                  onClick={() => setType(t)}
+                  onClick={() => setType(tab)}
                   className={`flex-1 rounded-lg px-2 py-1 text-xs font-medium transition ${
-                    type === t
+                    type === tab
                       ? "bg-emerald-500 text-emerald-950"
                       : "border border-white/15 bg-white/5 text-white/70 hover:bg-white/10"
                   }`}
                 >
-                  {t === "youtube" ? "▶ Lecture" : "📄 PDF"}
+                  {tab === "youtube" ? t("lectureTab") : t("pdfTab")}
                 </button>
               ))}
             </div>
@@ -244,7 +246,7 @@ export default function CoursePlaylist({
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Title (optional)"
+              placeholder={t("titleOptional")}
               className="rounded-lg border border-white/15 bg-white/5 px-2 py-1.5 text-xs text-white outline-none placeholder:text-white/40 focus:ring-2 focus:ring-emerald-500/50"
             />
             <div className="flex gap-2">
@@ -253,7 +255,7 @@ export default function CoursePlaylist({
                   type="url"
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
-                  placeholder="YouTube video or playlist link…"
+                  placeholder={t("pasteYtPlaceholder")}
                   className="flex-1 rounded-lg border border-white/15 bg-white/5 px-2 py-1.5 text-xs text-white outline-none placeholder:text-white/40 focus:ring-2 focus:ring-emerald-500/50"
                 />
               ) : (
@@ -264,7 +266,7 @@ export default function CoursePlaylist({
                     className="hidden"
                     onChange={(e) => setPdfFile(e.target.files?.[0] ?? null)}
                   />
-                  <span className="truncate">{pdfFile ? pdfFile.name : "📄 Choose PDF from device…"}</span>
+                  <span className="truncate">{pdfFile ? pdfFile.name : t("choosePdf")}</span>
                 </label>
               )}
               <button
@@ -272,7 +274,7 @@ export default function CoursePlaylist({
                 disabled={busy}
                 className="rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-medium text-emerald-950 hover:bg-emerald-400 disabled:opacity-60"
               >
-                {busy ? "…" : "Add"}
+                {busy ? "…" : t("add")}
               </button>
             </div>
             {previewId && (
@@ -288,7 +290,7 @@ export default function CoursePlaylist({
 
           {items.length === 0 ? (
             <p className="text-center text-xs text-white/45">
-              Build your course: add lectures and PDF readings in the order you want to study them.
+              {t("buildCourseHint")}
             </p>
           ) : (
             <ul className="flex max-h-80 flex-col gap-1.5 overflow-y-auto">

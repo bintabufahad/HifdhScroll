@@ -6,6 +6,7 @@ import SceneBackground from "@/components/SceneBackground";
 import { getAudioUrlCandidates, estimateReadDurationMs } from "@/lib/audio";
 import { resolveQuranComAudioUrl } from "@/lib/quranComAudio";
 import type { ReelSegment } from "@/lib/types";
+import { useLanguage } from "@/lib/i18n";
 
 /** Converts a number to Arabic-Indic digits (e.g. 255 -> ٢٥٥). */
 function toArabicNumerals(n: number): string {
@@ -23,6 +24,7 @@ export default function ReelPlayer({
   reelIndex: number;
   totalReels: number;
 }) {
+  const { t } = useLanguage();
   const [index, setIndex] = useState(0);
   const [playing, setPlaying] = useState(true);
   const [candidateIndex, setCandidateIndex] = useState(0);
@@ -136,7 +138,7 @@ export default function ReelPlayer({
       <div className="relative z-10 shrink-0 px-4 pt-4">
         <div className="flex items-center justify-between text-sm text-white">
           <Link href="/reels" className="rounded-full bg-black/30 px-3 py-1 text-white/90 backdrop-blur">
-            ‹ New reels
+            {t("newReels")}
           </Link>
           <span className="rounded-full bg-black/30 px-3 py-1 text-xs text-white/90 backdrop-blur">
             {reelIndex + 1} / {totalReels}
@@ -167,7 +169,7 @@ export default function ReelPlayer({
         <div className="flex min-h-full w-full flex-col items-center justify-center gap-3 py-2">
         {done ? (
           <div className="flex flex-col items-center gap-4 rounded-2xl bg-black/50 p-6">
-            <p className="font-display text-xl font-semibold text-white">Reel complete</p>
+            <p className="font-display text-xl font-semibold text-white">{t("reelComplete")}</p>
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -175,7 +177,7 @@ export default function ReelPlayer({
               }}
               className="rounded-full bg-amber-400 px-5 py-2 text-[#3b2a1a] font-medium"
             >
-              Replay
+              {t("replay")}
             </button>
           </div>
         ) : (
@@ -201,7 +203,7 @@ export default function ReelPlayer({
                 {current.surahName} · {current.surahNumber}:{current.numberInSurah}
               </p>
               <p className="max-w-md text-sm text-white/85 drop-shadow sm:text-base">{current.translation}</p>
-              {!playing && <span className="text-xs text-white/60">Paused — tap to resume</span>}
+              {!playing && <span className="text-xs text-white/60">{t("pausedTap")}</span>}
             </div>
           )
         )}

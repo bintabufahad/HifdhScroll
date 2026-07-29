@@ -6,6 +6,7 @@ import { getAudioUrlCandidates } from "@/lib/audio";
 import { getQari } from "@/lib/qaris";
 import type { Feeling } from "@/lib/feelings";
 import type { Ayah } from "@/lib/types";
+import { useLanguage } from "@/lib/i18n";
 
 /** Converts a number to Arabic-Indic digits (e.g. 255 -> ٢٥٥). */
 function toArabicNumerals(n: number): string {
@@ -19,29 +20,38 @@ function toArabicNumerals(n: number): string {
  * Send-an-Ayah feature meet).
  */
 export default function FeelingViewer({ feeling, groups }: { feeling: Feeling; groups: Ayah[][] }) {
+  const { t, lang, dir } = useLanguage();
   return (
-    <div className="bg-app-dark flex min-h-[100dvh] flex-col items-center px-5 py-8">
+    <div dir={dir} className="bg-app-dark flex min-h-[100dvh] flex-col items-center px-5 py-8">
       <div className="w-full max-w-xl">
         <div className="mb-5 flex items-center gap-3">
           <Link
             href="/feel"
             className="lift inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-500 px-4 py-1.5 text-sm font-semibold text-emerald-950 transition hover:bg-emerald-400"
           >
-            ← Feelings
+            {t("feelingsBack")}
           </Link>
         </div>
 
         <header className="animate-rise-in mb-6 text-center">
           <span className="text-3xl">{feeling.emoji}</span>
           <h1 className="mt-2 font-display text-xl font-bold text-white sm:text-3xl">
-            When you feel <span className="text-emerald-300">{feeling.label.toLowerCase()}</span>
+            {lang === "ar" ? (
+              <span className="text-emerald-300">{feeling.whenArabic}</span>
+            ) : (
+              <>
+                When you feel <span className="text-emerald-300">{feeling.label.toLowerCase()}</span>
+              </>
+            )}
           </h1>
-          <p className="mx-auto mt-2 max-w-sm text-sm italic text-white/55">{feeling.line}</p>
+          <p className="mx-auto mt-2 max-w-sm text-sm italic text-white/55">
+            {lang === "ar" ? feeling.lineArabic : feeling.line}
+          </p>
         </header>
 
         {groups.length === 0 ? (
           <p className="text-center text-sm text-white/50">
-            Couldn&apos;t load the ayahs right now — please try again in a moment.
+            {t("couldntLoadAyahs")}
           </p>
         ) : (
           <div className="flex flex-col gap-4">
@@ -52,9 +62,9 @@ export default function FeelingViewer({ feeling, groups }: { feeling: Feeling; g
         )}
 
         <p className="mt-8 text-center text-xs text-white/45">
-          Someone you know is feeling this too.{" "}
+          {t("someoneFeelsThis")}{" "}
           <Link href="/gift/new" className="text-emerald-300 underline underline-offset-2 hover:text-emerald-200">
-            Send them an ayah 🎁
+            {t("sendThemAyah")}
           </Link>
         </p>
       </div>
@@ -63,6 +73,7 @@ export default function FeelingViewer({ feeling, groups }: { feeling: Feeling; g
 }
 
 function AyahCard({ ayahs, index }: { ayahs: Ayah[]; index: number }) {
+  const { t } = useLanguage();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [playingIdx, setPlayingIdx] = useState<number | null>(null);
   const [candidateIndex, setCandidateIndex] = useState(0);
@@ -138,13 +149,13 @@ function AyahCard({ ayahs, index }: { ayahs: Ayah[]; index: number }) {
             onClick={() => playFrom(0)}
             className="rounded-full bg-white/10 px-3 py-1.5 text-xs text-white/85 transition hover:bg-white/20"
           >
-            {playingIdx !== null ? "⏸" : "▶"} Recite
+            {playingIdx !== null ? "⏸" : "▶"} {t("recite")}
           </button>
           <Link
             href={`/gift/new?s=${first.surahNumber}&a=${first.numberInSurah}`}
             className="rounded-full bg-emerald-500/90 px-3 py-1.5 text-xs font-semibold text-emerald-950 transition hover:bg-emerald-400"
           >
-            🎁 Send
+            {t("sendBtn")}
           </Link>
         </div>
       </div>

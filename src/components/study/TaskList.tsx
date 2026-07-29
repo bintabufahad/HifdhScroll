@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { StudyTask } from "@/lib/types";
+import { useLanguage } from "@/lib/i18n";
 
 /**
  * The class to-do list, shared live across everyone in the class. Local edits go
@@ -19,6 +20,7 @@ export default function TaskList({
   classId: string;
   fill?: boolean;
 }) {
+  const { t } = useLanguage();
   const [tasks, setTasks] = useState<StudyTask[]>(initialTasks);
   const [title, setTitle] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -113,7 +115,7 @@ export default function TaskList({
     <div className={`glass flex min-w-0 flex-col rounded-2xl p-2.5 sm:p-4 ${fill ? "h-full min-h-0" : ""}`}>
       <div className="mb-2 flex shrink-0 items-start justify-between gap-2">
         <p className="min-w-0 text-[11px] font-medium uppercase tracking-wide text-emerald-200/70 sm:text-xs sm:tracking-widest">
-          To-do list
+          {t("todoList")}
         </p>
         <span className="shrink-0 text-[11px] text-white/50 sm:text-xs">
           {doneCount}/{tasks.length}
@@ -125,7 +127,7 @@ export default function TaskList({
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="Add a task…"
+          placeholder={t("addTaskPlaceholder")}
           className="min-w-0 flex-1 rounded-lg border border-white/15 bg-white/5 px-2.5 py-1.5 text-sm text-white outline-none placeholder:text-white/40 focus:ring-2 focus:ring-emerald-500/50"
         />
         <button
@@ -133,12 +135,12 @@ export default function TaskList({
           disabled={submitting}
           className="shrink-0 rounded-lg bg-emerald-500 px-3 py-1.5 text-sm font-medium text-emerald-950 hover:bg-emerald-400 disabled:opacity-50"
         >
-          Add
+          {t("add")}
         </button>
       </form>
 
       {tasks.length === 0 ? (
-        <p className="text-center text-sm text-white/45">No tasks yet — add your first one above.</p>
+        <p className="text-center text-sm text-white/45">{t("noTasksYet")}</p>
       ) : (
         <ul className={`flex flex-col gap-1.5 ${fill ? "min-h-0 flex-1 overflow-y-auto pr-1" : ""}`}>
           {tasks.map((task) => (
@@ -161,7 +163,7 @@ export default function TaskList({
               <button
                 type="button"
                 onClick={() => deleteTask(task.id)}
-                aria-label="Delete task"
+                aria-label={t("deleteTask")}
                 className="shrink-0 text-red-300/70 hover:text-red-300"
               >
                 ✕

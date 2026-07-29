@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 export interface CameraController {
   stream: MediaStream | null;
   cameraOn: boolean;
+  /** An i18n StringKey ("" when no error) - translate at display time. */
   error: string;
   recording: boolean;
   recordingUrl: string | null;
@@ -56,7 +57,7 @@ export function useCamera(): CameraController {
 
     setError("");
     if (!navigator.mediaDevices?.getUserMedia) {
-      setError("This browser can't access the camera. Try a different browser, or study without it.");
+      setError("browserNoCamera");
       return;
     }
     try {
@@ -73,18 +74,18 @@ export function useCamera(): CameraController {
     } catch (err) {
       const name = err instanceof DOMException ? err.name : "";
       if (name === "NotAllowedError") {
-        setError("Camera permission was blocked. Allow it in your browser's site settings, then try again.");
+        setError("cameraBlocked");
       } else if (name === "NotFoundError") {
-        setError("No camera was found on this device.");
+        setError("noCameraFound");
       } else {
-        setError("Couldn't start the camera. You can still study without it.");
+        setError("cameraFailed");
       }
     }
   }
 
   function startRecording() {
     if (!streamRef.current || typeof MediaRecorder === "undefined") {
-      setError("Recording isn't supported in this browser.");
+      setError("recordingUnsupported");
       return;
     }
     if (urlRef.current) {
@@ -108,7 +109,7 @@ export function useCamera(): CameraController {
       recorderRef.current = recorder;
       setRecording(true);
     } catch {
-      setError("Couldn't start recording on this device.");
+      setError("recordingFailed");
     }
   }
 
